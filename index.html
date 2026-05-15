@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#0a2540" />
+<title>MBSduo — Learn Mortgage-Backed Securities</title>
+<style>
+  :root {
+    --navy-900: #061a30;
+    --navy-800: #0a2540;
+    --navy-700: #11355c;
+    --navy-600: #1a4a82;
+    --navy-500: #2563a6;
+    --navy-400: #4a86c4;
+    --navy-300: #8fb4d8;
+    --navy-100: #d9e6f2;
+    --navy-50:  #eef4fa;
+    --white:    #ffffff;
+    --ink:      #0a2540;
+    --muted:    #6b7c91;
+    --good:     #1f9d57;
+    --good-bg:  #e6f7ee;
+    --bad:      #d6334a;
+    --bad-bg:   #fde7ea;
+    --gold:     #e3b53b;
+    --shadow:   0 6px 20px rgba(10, 37, 64, 0.12);
+    --shadow-lg:0 14px 40px rgba(10, 37, 64, 0.22);
+    --radius:   16px;
+    --radius-sm:10px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--white);
+    overscroll-behavior-y: none;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  ::selection { background: var(--navy-600); color: white; }
+
+  /* App container */
+  #app {
+    max-width: 720px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* Top bar (sticky) */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--navy-800);
+    color: var(--white);
+    box-shadow: var(--shadow);
+  }
+  .topbar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+  }
+  .brand-mark {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4a86c4, #ffffff);
+    display: grid; place-items: center;
+    color: var(--navy-800);
+    font-weight: 900;
+    font-size: 14px;
+  }
+  .stats {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.10);
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+  .stat.warn { background: rgba(255,255,255,0.18); }
+  .stat svg { width: 16px; height: 16px; }
+
+  /* Screens */
+  .screen { padding: 20px 18px 96px; flex: 1; animation: fadeIn 0.18s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  h1, h2, h3 { color: var(--navy-800); margin: 0 0 6px; }
+  h1 { font-size: 26px; letter-spacing: -0.5px; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 16px; }
+  p.sub { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+
+  /* Home: section list */
+  .section-card {
+    background: var(--white);
+    border: 2px solid var(--navy-100);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .section-card:hover { transform: translateY(-1px); border-color: var(--navy-300); }
+  .section-card.locked { opacity: 0.6; }
+  .section-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .section-title {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 800; color: var(--navy-800); font-size: 17px;
+  }
+  .section-num {
+    width: 30px; height: 30px;
+    background: var(--navy-800); color: white;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 900;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--navy-50);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--navy-600), var(--navy-400));
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+  .section-meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  /* Unit path within a section */
+  .unit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .unit-node {
+    aspect-ratio: 1 / 1;
+    background: var(--white);
+    border: 3px solid var(--navy-100);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--navy-800);
+    box-shadow: var(--shadow);
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .unit-node .num {
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 6px;
+    color: var(--navy-800);
+  }
+  .unit-node .name { font-size: 12px; font-weight: 600; color: var(--navy-700); }
+  .unit-node:not(.locked):hover { transform: translateY(-2px) scale(1.02); border-color: var(--navy-400); }
+  .unit-node.done {
+    background: var(--navy-800);
+    border-color: var(--navy-800);
+    color: white;
+  }
+  .unit-node.done .num, .unit-node.done .name { color: white; }
+  .unit-node.done::after {
+    content: "✓";
+    position: absolute;
+    top: 6px; right: 8px;
+    background: var(--gold);
+    color: var(--navy-800);
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 900;
+  }
+  .unit-node.locked {
+    background: var(--navy-50);
+    border-color: var(--navy-100);
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .unit-node.locked .num, .unit-node.locked .name { color: var(--muted); }
+  .unit-node.locked::before {
+    content: "🔒";
+    position: absolute; top: 6px; right: 8px;
+    filter: grayscale(1);
+    font-size: 14px;
+  }
+  .unit-node.current {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(227, 181, 59, 0.25), var(--shadow);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--navy-800);
+    color: var(--white);
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    box-shadow: 0 5px 0 var(--navy-900);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    text-transform: uppercase;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--navy-900); }
+  .btn.secondary { background: var(--white); color: var(--navy-800); border: 2px solid var(--navy-100); box-shadow: 0 5px 0 var(--navy-100); }
+  .btn.secondary:active { box-shadow: 0 2px 0 var(--navy-100); }
+  .btn.success { background: var(--good); box-shadow: 0 5px 0 #156d3d; }
+  .btn.success:active { box-shadow: 0 2px 0 #156d3d; }
+  .btn.danger  { background: var(--bad); box-shadow: 0 5px 0 #952434; }
+  .btn.ghost   { background: transparent; color: var(--navy-800); box-shadow: none; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn.block { width: 100%; }
+
+  /* Lesson screen */
+  .lesson-head {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .quit-btn {
+    background: transparent; color: var(--muted); font-size: 22px; padding: 4px 10px;
+  }
+  .lesson-progress {
+    flex: 1;
+    height: 12px;
+    background: var(--navy-50);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .lesson-progress > div {
+    height: 100%;
+    background: linear-gradient(90deg, var(--navy-700), var(--navy-400));
+    transition: width 0.3s ease;
+  }
+  .hearts-mini { display: flex; gap: 4px; align-items: center; font-weight: 800; color: var(--bad); }
+  .question-text {
+    font-size: 22px;
+    line-height: 1.35;
+    font-weight: 800;
+    color: var(--navy-800);
+    margin: 18px 0 22px;
+  }
+  .answers { display: grid; gap: 10px; }
+  .answer {
+    display: flex; align-items: center; justify-content: flex-start;
+    text-align: left;
+    background: var(--white);
+    border: 2px solid var(--navy-100);
+    color: var(--navy-800);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 3px 0 var(--navy-100);
+    transition: transform 0.08s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+  .answer:hover { border-color: var(--navy-400); }
+  .answer.selected { border-color: var(--navy-600); background: var(--navy-50); box-shadow: 0 3px 0 var(--navy-300); }
+  .answer.correct { border-color: var(--good); background: var(--good-bg); color: #0d6b3b; box-shadow: 0 3px 0 var(--good); }
+  .answer.wrong   { border-color: var(--bad);  background: var(--bad-bg);  color: #8b1c2c; box-shadow: 0 3px 0 var(--bad); }
+  .answer:disabled { cursor: default; }
+  .answer .pip {
+    flex: 0 0 22px; width: 22px; height: 22px;
+    border: 2px solid var(--navy-300); border-radius: 6px;
+    margin-right: 12px;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 900; color: var(--navy-600);
+    background: var(--white);
+  }
+  .answer.selected .pip { border-color: var(--navy-600); background: var(--navy-600); color: white; }
+  .answer.correct .pip { border-color: var(--good); background: var(--good); color: white; }
+  .answer.wrong .pip   { border-color: var(--bad);  background: var(--bad);  color: white; }
+
+  /* Feedback drawer */
+  .feedback {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--white);
+    border-top: 2px solid var(--navy-100);
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    box-shadow: var(--shadow-lg);
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    z-index: 30;
+  }
+  .feedback.show { transform: translateY(0); }
+  .feedback.correct { background: var(--good-bg); border-top-color: var(--good); }
+  .feedback.wrong   { background: var(--bad-bg);  border-top-color: var(--bad); }
+  .feedback h3 { margin: 0 0 6px; }
+  .feedback.correct h3 { color: #0d6b3b; }
+  .feedback.wrong h3   { color: #8b1c2c; }
+  .feedback .explain { color: var(--ink); font-size: 14px; margin-bottom: 12px; }
+  .feedback .actions { display: flex; gap: 10px; }
+
+  /* Result screen */
+  .result-hero {
+    text-align: center;
+    padding: 28px 16px;
+    background: linear-gradient(180deg, var(--navy-800), var(--navy-600));
+    color: white;
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  .result-hero .big { font-size: 48px; line-height: 1; margin-bottom: 8px; }
+  .result-hero h2 { color: white; font-size: 24px; margin-bottom: 4px; }
+  .result-hero p { color: rgba(255,255,255,0.85); margin: 0; }
+  .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .result-stat {
+    background: var(--white);
+    border: 2px solid var(--navy-100);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+  .result-stat .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+  .result-stat .value { font-size: 22px; font-weight: 900; color: var(--navy-800); }
+
+  /* Bottom nav */
+  .tabbar {
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+    border-top: 1px solid var(--navy-100);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 15;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab {
+    padding: 10px 4px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tab .ico { display: block; font-size: 20px; margin-bottom: 2px; }
+  .tab.active { color: var(--navy-800); }
+  .tab.active .ico { transform: translateY(-1px); }
+
+  /* Achievements */
+  .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .badge {
+    background: var(--white);
+    border: 2px solid var(--navy-100);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s ease;
+  }
+  .badge.locked { opacity: 0.5; filter: grayscale(0.8); }
+  .badge:not(.locked):hover { transform: translateY(-2px); }
+  .badge .emoji {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  .badge .name { font-weight: 800; color: var(--navy-800); font-size: 14px; }
+  .badge .desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* Hearts modal */
+  .modal-back {
+    position: fixed; inset: 0;
+    background: rgba(10, 37, 64, 0.6);
+    display: none; align-items: center; justify-content: center;
+    z-index: 40;
+    padding: 18px;
+  }
+  .modal-back.show { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px 22px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: pop 0.18s ease-out;
+  }
+  @keyframes pop {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal .emoji-lg { font-size: 56px; }
+  .modal h2 { margin: 8px 0 4px; }
+  .modal p { color: var(--muted); margin: 0 0 18px; }
+  .modal .actions { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+    background: var(--navy-800); color: white;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 50;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Section pill divider */
+  .section-banner {
+    background: var(--navy-800);
+    color: white;
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .section-banner .num-lg {
+    width: 44px; height: 44px;
+    background: var(--white); color: var(--navy-800);
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 18px; font-weight: 900;
+    flex: 0 0 44px;
+  }
+  .section-banner h2 { color: white; margin: 0; font-size: 18px; }
+  .section-banner p { margin: 2px 0 0; color: rgba(255,255,255,0.85); font-size: 13px; }
+
+  /* Profile screen */
+  .profile-hero {
+    background: linear-gradient(135deg, var(--navy-800), var(--navy-600));
+    color: white;
+    padding: 22px;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .profile-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--navy-800);
+    display: grid; place-items: center;
+    font-size: 32px; font-weight: 900;
+    margin: 0 auto 10px;
+  }
+  .profile-name { font-size: 20px; font-weight: 800; }
+  .profile-level { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+  .xp-bar {
+    height: 10px; background: rgba(255,255,255,0.2); border-radius: 999px; overflow: hidden;
+    margin-top: 12px;
+  }
+  .xp-bar > div { height: 100%; background: var(--gold); border-radius: 999px; transition: width 0.4s ease; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-tile {
+    background: var(--white); border: 2px solid var(--navy-100); border-radius: var(--radius);
+    padding: 14px; text-align: center; box-shadow: var(--shadow);
+  }
+  .stat-tile .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .stat-tile .value { font-size: 22px; font-weight: 900; color: var(--navy-800); margin-top: 4px; }
+
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--navy-700); font-weight: 700; font-size: 14px;
+    padding: 6px 0; margin-bottom: 6px;
+  }
+
+  /* Welcome */
+  .welcome { text-align: center; padding: 30px 14px 0; }
+  .welcome .logo-xl {
+    width: 96px; height: 96px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--navy-800), var(--navy-500));
+    border-radius: 24px;
+    display: grid; place-items: center;
+    color: white; font-weight: 900; font-size: 36px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* small screens */
+  @media (max-width: 380px) {
+    .stats { gap: 8px; }
+    .stat { padding: 5px 8px; font-size: 13px; }
+    .question-text { font-size: 19px; }
+  }
+
+  /* No outline on mouse, keep for keyboard */
+  :focus { outline: none; }
+  :focus-visible { outline: 3px solid var(--navy-400); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar" id="topbar">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <span>MBSduo</span>
+    </div>
+    <div class="stats" id="stats">
+      <span class="stat" title="Streak">🔥 <span id="stat-streak">0</span></span>
+      <span class="stat" title="XP">⭐ <span id="stat-xp">0</span></span>
+      <span class="stat warn" title="Hearts">❤️ <span id="stat-hearts">5</span></span>
+    </div>
+  </div>
+
+  <div id="view" class="screen"></div>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="home"><span class="ico">🏠</span>Learn</button>
+    <button class="tab" data-tab="badges"><span class="ico">🏅</span>Badges</button>
+    <button class="tab" data-tab="profile"><span class="ico">👤</span>Profile</button>
+    <button class="tab" data-tab="about"><span class="ico">ℹ️</span>About</button>
+  </nav>
+</div>
+
+<div class="modal-back" id="modal-back">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================================
+// MBSduo — Single-file gamified MBS learning app
+// =============================================================
+
+// ---------- Content: Sections, Units, Questions ----------
+const COURSE = [
+  // 1. FOUNDATIONS
+  {
+    id: "foundations",
+    title: "Foundations",
+    blurb: "Mortgages, borrowers, and the primary market.",
+    units: [
+      {
+        id: "f1", name: "What's a Mortgage?",
+        questions: [
+          { q: "A mortgage is best described as:", choices: [
+            "A loan secured by real property",
+            "An unsecured personal loan",
+            "A type of corporate bond",
+            "A short-term government note"
+          ], answer: 0, explain: "A mortgage is a loan where the underlying real estate serves as collateral. If the borrower defaults, the lender can foreclose." },
+
+          { q: "In a mortgage, who is the 'mortgagor'?", choices: [
+            "The borrower",
+            "The lender",
+            "The servicer",
+            "The trustee"
+          ], answer: 0, explain: "Counterintuitively, the mortgagor is the BORROWER (they grant the mortgage interest). The 'mortgagee' is the lender." },
+
+          { q: "True or false: A mortgage is the loan itself.", choices: [
+            "True",
+            "False — the mortgage is the lien/security interest; the note is the loan"
+          ], answer: 1, explain: "The promissory note is the loan obligation. The mortgage (or deed of trust) is the security instrument granting the lender a lien on the property." },
+
+          { q: "Which of these is NOT a typical mortgage feature?", choices: [
+            "Monthly payments",
+            "Real estate collateral",
+            "Margin call provisions",
+            "Amortization schedule"
+          ], answer: 2, explain: "Margin calls are a feature of margin loans and derivatives, not residential mortgages. Mortgages amortize on a fixed schedule." },
+
+          { q: "The 'principal' of a mortgage refers to:", choices: [
+            "The interest cost",
+            "The amount borrowed (and still owed)",
+            "The down payment",
+            "The closing costs"
+          ], answer: 1, explain: "Principal is the outstanding loan balance. Payments cover interest on the principal plus a portion that reduces the principal." }
+        ]
+      },
+      {
+        id: "f2", name: "Mortgage Mechanics",
+        questions: [
+          { q: "Early in a standard 30-year fixed mortgage, most of each payment goes toward:", choices: [
+            "Principal",
+            "Interest",
+            "Escrow",
+            "Servicing fees"
+          ], answer: 1, explain: "Amortization is front-loaded with interest. Late in the loan, most of the payment is principal — the opposite pattern." },
+
+          { q: "Amortization means:", choices: [
+            "The loan balance grows over time",
+            "The principal is paid down over scheduled payments",
+            "Payments fluctuate with market rates",
+            "The lender collects a balloon payment"
+          ], answer: 1, explain: "Amortization is the structured paydown of principal over the loan's life so the balance reaches zero at maturity." },
+
+          { q: "A 15-year fixed mortgage compared to a 30-year at the same rate has:", choices: [
+            "Lower monthly payment, more total interest",
+            "Higher monthly payment, less total interest",
+            "Same monthly payment, less total interest",
+            "Higher monthly payment, more total interest"
+          ], answer: 1, explain: "Shorter term = larger payments but far less interest paid overall because the balance shrinks faster." },
+
+          { q: "True or false: A prepayment reduces the loan's interest cost.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Prepaying principal lowers the outstanding balance, which reduces future interest accruals — saving the borrower money." },
+
+          { q: "An 'escrow' account on a mortgage typically holds funds for:", choices: [
+            "Future principal payments",
+            "Property taxes and insurance",
+            "Credit card debt",
+            "Stock investments"
+          ], answer: 1, explain: "Servicers collect monthly escrow alongside P&I to pay annual property taxes and homeowners insurance on the borrower's behalf." }
+        ]
+      },
+      {
+        id: "f3", name: "Mortgage Types",
+        questions: [
+          { q: "An ARM is a:", choices: [
+            "Adjustable-Rate Mortgage",
+            "Asset-Recourse Mortgage",
+            "Annual Reset Mortgage",
+            "Amortizing Refinance Module"
+          ], answer: 0, explain: "ARMs have an interest rate that resets periodically based on an index (SOFR, etc.) plus a margin." },
+
+          { q: "A '5/1 ARM' means:", choices: [
+            "5% rate for 1 year",
+            "Fixed for 5 years, then resets every 1 year",
+            "5-year term, paid once per year",
+            "Fixed for 1 year, then resets every 5 years"
+          ], answer: 1, explain: "The first number is the initial fixed period; the second is how often it resets thereafter." },
+
+          { q: "An interest-only (IO) loan has:", choices: [
+            "No interest charged",
+            "Only interest paid for a period — principal stays flat",
+            "Higher principal payments upfront",
+            "No collateral"
+          ], answer: 1, explain: "IO periods keep the principal balance constant. After the IO period ends, payments jump to fully amortize the remaining term." },
+
+          { q: "True or false: A balloon mortgage requires a large lump-sum payment at maturity.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Balloon loans amortize on a longer schedule than their maturity, leaving a large remaining 'balloon' balance due at the end." },
+
+          { q: "Which loan most directly exposes the borrower to rising rates?", choices: [
+            "30-year FRM",
+            "15-year FRM",
+            "5/1 ARM after the fixed period",
+            "Fully prepaid loan"
+          ], answer: 2, explain: "Once the ARM's fixed period ends, payments float with the index — so rising rates increase the borrower's payment." }
+        ]
+      },
+      {
+        id: "f4", name: "Borrower Risk: LTV, DTI, Credit",
+        questions: [
+          { q: "LTV stands for:", choices: [
+            "Loan-to-Value",
+            "Lifetime Volume",
+            "Lender Tax Vehicle",
+            "Long-Term Vintage"
+          ], answer: 0, explain: "LTV = loan amount ÷ appraised value. Higher LTV = less borrower equity cushion = higher default risk." },
+
+          { q: "A loan with 90% LTV is generally:", choices: [
+            "Lower risk than 60% LTV",
+            "Higher risk than 60% LTV",
+            "The same risk as 60% LTV",
+            "Always uninsurable"
+          ], answer: 1, explain: "Less borrower equity means a smaller buffer against price declines and a stronger incentive to walk away if the house goes underwater." },
+
+          { q: "DTI measures:", choices: [
+            "Borrower's debt payments relative to income",
+            "Deal-Time-Interval",
+            "Days to issuance",
+            "Down payment ratio"
+          ], answer: 0, explain: "Debt-to-Income ratio. Underwriters typically cap front-end DTI (housing) and back-end DTI (total debt) at qualifying thresholds." },
+
+          { q: "True or false: A FICO score is a measure of property value.", choices: [
+            "True",
+            "False — it measures borrower credit risk"
+          ], answer: 1, explain: "FICO is a borrower credit risk score (300–850). Property valuation is done via appraisal or AVM." },
+
+          { q: "Mortgage insurance (PMI) is typically required when LTV is:", choices: [
+            "Above 80%",
+            "Below 50%",
+            "Above 95% only",
+            "Never required"
+          ], answer: 0, explain: "Private mortgage insurance kicks in above ~80% LTV to protect the lender against losses from default in higher-leverage loans." }
+        ]
+      },
+      {
+        id: "f5", name: "The Primary Market",
+        questions: [
+          { q: "The 'primary' mortgage market refers to:", choices: [
+            "Originators making loans to borrowers",
+            "Trading of MBS between dealers",
+            "GSE securitization desks",
+            "The Fed's open-market operations"
+          ], answer: 0, explain: "Primary market = where loans are originated. Secondary market = where loans/MBS are sold and traded after origination." },
+
+          { q: "A mortgage originator is most directly:", choices: [
+            "A bond underwriter",
+            "An investor in MBS",
+            "A lender making new loans",
+            "A loan servicer only"
+          ], answer: 2, explain: "Originators (banks, credit unions, non-bank lenders) underwrite and fund loans to borrowers. They may sell those loans into the secondary market." },
+
+          { q: "True or false: Many mortgages are sold by originators shortly after closing.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Most originators sell loans to GSEs or aggregators to free up capital and shed interest-rate risk. Some retain servicing rights." },
+
+          { q: "A 'conforming' loan is one that:", choices: [
+            "Meets GSE underwriting guidelines and size limits",
+            "Conforms to bank capital rules",
+            "Has a conforming credit score above 800",
+            "Was originated by a non-bank lender"
+          ], answer: 0, explain: "Conforming = within Fannie/Freddie underwriting guidelines and below the conforming loan limit. Non-conforming = jumbo or doesn't meet guidelines." },
+
+          { q: "Which is NOT typically an originator?", choices: [
+            "Wells Fargo",
+            "Rocket Mortgage",
+            "A community credit union",
+            "BlackRock (asset manager)"
+          ], answer: 3, explain: "Asset managers like BlackRock are MBS investors, not originators. Banks and non-bank lenders originate loans." }
+        ]
+      }
+    ]
+  },
+
+  // 2. SECURITIZATION
+  {
+    id: "securitization",
+    title: "Securitization 101",
+    blurb: "Turning loans into tradeable securities.",
+    units: [
+      {
+        id: "s1", name: "Why Securitize?",
+        questions: [
+          { q: "Securitization helps originators primarily by:", choices: [
+            "Freeing up capital and offloading risk",
+            "Increasing their loan inventory",
+            "Eliminating credit risk on retained loans",
+            "Lowering origination costs to zero"
+          ], answer: 0, explain: "Selling loans into a securitization frees balance-sheet capital, transfers interest rate and (often) credit risk, and recycles funding to make new loans." },
+
+          { q: "A key benefit of securitization for INVESTORS is:", choices: [
+            "Diversified exposure to many loans in one security",
+            "Direct ownership of physical real estate",
+            "Guaranteed double-digit returns",
+            "No interest rate risk"
+          ], answer: 0, explain: "Pooling thousands of loans diversifies idiosyncratic default risk and creates large, liquid securities investors can buy in standard sizes." },
+
+          { q: "True or false: Securitization can lower borrowers' mortgage rates by increasing capital supply.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "By tapping the deep capital markets (vs. just bank deposits), securitization expands funding supply, which generally pushes mortgage rates down at the margin." },
+
+          { q: "The 'originate to distribute' model means:", choices: [
+            "Originators keep all loans on their balance sheet",
+            "Originators make loans intending to sell them",
+            "Borrowers distribute payments to multiple lenders",
+            "Loans are distributed across countries"
+          ], answer: 1, explain: "Under originate-to-distribute, lenders make loans with the intent to sell them into the secondary market rather than hold them to maturity." },
+
+          { q: "Securitization transfers which risks to investors?", choices: [
+            "Only interest rate risk",
+            "Only credit risk",
+            "Interest rate risk, prepayment risk, and (depending on structure) credit risk",
+            "No risks at all"
+          ], answer: 2, explain: "All economic risks of the underlying pool pass through to the security holders, except where the structure (e.g., agency guarantee) absorbs credit risk." }
+        ]
+      },
+      {
+        id: "s2", name: "The Pooling Process",
+        questions: [
+          { q: "A mortgage 'pool' is:", choices: [
+            "A group of loans bundled for securitization",
+            "A pool of borrower funds in escrow",
+            "A lender's available capital",
+            "The aggregate housing inventory"
+          ], answer: 0, explain: "A pool is a basket of mortgages with similar characteristics (coupon, term, borrower profile) bundled into a single security." },
+
+          { q: "Which characteristic do investors look at when assessing a pool?", choices: [
+            "Weighted average coupon (WAC)",
+            "Weighted average maturity (WAM)",
+            "Loan-to-value distribution",
+            "All of the above"
+          ], answer: 3, explain: "Pool analytics include WAC, WAM, WALA (weighted avg loan age), LTV/FICO distribution, geographic concentration, and many more metrics." },
+
+          { q: "True or false: All loans in an agency pool must have identical coupons.", choices: [
+            "True",
+            "False"
+          ], answer: 1, explain: "Loans within an agency pool have slightly different note rates; the pass-through coupon is below the WAC by the servicing + guarantee fees." },
+
+          { q: "WAC is:", choices: [
+            "Weighted Average Coupon — average note rate of loans in pool",
+            "Whole Asset Capital",
+            "Weighted Aggregate Credit",
+            "Wholesale Acquisition Cost"
+          ], answer: 0, explain: "WAC is the weighted average gross note rate. The pass-through (net) coupon is WAC minus servicing & guarantee fees." },
+
+          { q: "WAM means:", choices: [
+            "Weighted Average Maturity (remaining months to maturity)",
+            "Weighted Asset Margin",
+            "Whole Adjustable Mortgage",
+            "Weekly Asset Movement"
+          ], answer: 0, explain: "WAM is the dollar-weighted remaining term of loans in the pool. A 30-year pool issued today has WAM near 360 months." }
+        ]
+      },
+      {
+        id: "s3", name: "Servicers & Trustees",
+        questions: [
+          { q: "A mortgage servicer:", choices: [
+            "Collects payments and handles borrower interactions",
+            "Underwrites new loans",
+            "Sets MBS prices",
+            "Issues GSE guarantees"
+          ], answer: 0, explain: "Servicers collect P&I, manage escrow, work delinquencies, and remit funds to security holders. They earn a servicing fee (e.g., 25bps)." },
+
+          { q: "An MBS trustee:", choices: [
+            "Holds the loans on behalf of investors and enforces the trust documents",
+            "Sets interest rates",
+            "Underwrites the borrower",
+            "Manages the escrow"
+          ], answer: 0, explain: "The trustee is a fiduciary that holds title to the pool assets in trust for the security holders and oversees compliance with the indenture." },
+
+          { q: "True or false: Servicing rights (MSRs) can be bought and sold separately from the loan.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Mortgage Servicing Rights are a tradeable asset. Lenders may sell loans but retain servicing — or vice versa." },
+
+          { q: "Which is a typical servicer responsibility during a delinquency?", choices: [
+            "Loss mitigation (modifications, forbearance)",
+            "Setting new origination guidelines",
+            "Issuing new securities",
+            "Auditing the GSEs"
+          ], answer: 0, explain: "Servicers handle the workout process — payment plans, loan modifications, forbearance — and ultimately foreclosure if needed." },
+
+          { q: "A 'master servicer' on a non-agency deal:", choices: [
+            "Oversees primary servicers and aggregates remittances",
+            "Originates the loans",
+            "Sets the federal funds rate",
+            "Issues credit ratings"
+          ], answer: 0, explain: "Master servicers supervise primary/special servicers, aggregate cash flows, and report to the trustee in private-label transactions." }
+        ]
+      },
+      {
+        id: "s4", name: "SPVs and Trusts",
+        questions: [
+          { q: "An SPV in securitization is:", choices: [
+            "A bankruptcy-remote legal entity that holds the asset pool",
+            "A type of fast car",
+            "A specific kind of mortgage rate",
+            "A regulator"
+          ], answer: 0, explain: "A Special Purpose Vehicle (or special purpose entity) is a separate legal entity that isolates the assets from the originator's bankruptcy risk." },
+
+          { q: "True or false: SPVs are designed so the originator's bankruptcy can drag in the SPV assets.", choices: [
+            "True",
+            "False — the whole point is bankruptcy remoteness"
+          ], answer: 1, explain: "Bankruptcy remoteness is a structural cornerstone — assets in the trust shouldn't be consolidated into the originator's estate if the originator fails." },
+
+          { q: "An REMIC is:", choices: [
+            "A Real Estate Mortgage Investment Conduit — a tax-advantaged securitization vehicle",
+            "A Regulatory Equity Mortgage Index",
+            "A REIT subsidiary",
+            "A bank capital ratio"
+          ], answer: 0, explain: "REMICs (created by the 1986 Tax Reform Act) avoid double taxation at the entity level, making them the standard CMO vehicle." },
+
+          { q: "Why is the SPV structure important to investors?", choices: [
+            "It isolates pool cash flows from the originator's other liabilities",
+            "It guarantees positive returns",
+            "It eliminates interest rate risk",
+            "It allows the originator to claw back assets"
+          ], answer: 0, explain: "Investors are buying claims on the pool's cash flows. Legal isolation ensures those flows aren't disrupted by problems elsewhere in the originator's business." },
+
+          { q: "A 'true sale' opinion in a securitization confirms that:", choices: [
+            "The assets have been legally sold to the SPV",
+            "The originator paid sales tax",
+            "The loans are at par value",
+            "The MBS has been priced fairly"
+          ], answer: 0, explain: "True sale legal opinions support the bankruptcy-remote structure by confirming the transfer to the SPV is a sale, not a financing." }
+        ]
+      },
+      {
+        id: "s5", name: "Cash Flow Waterfall",
+        questions: [
+          { q: "A 'waterfall' in securitization refers to:", choices: [
+            "The rules for distributing cash flows to security holders",
+            "A type of mortgage product",
+            "Interest rate movements",
+            "Pool concentration limits"
+          ], answer: 0, explain: "The waterfall is the priority of payments — senior tranches get paid before subordinate tranches, principal before residual, etc." },
+
+          { q: "In a typical waterfall, who gets paid first?", choices: [
+            "The most senior tranche",
+            "The most subordinate tranche",
+            "The residual holder",
+            "The originator"
+          ], answer: 0, explain: "Senior tranches sit at the top of the waterfall and receive interest (and often principal) before subordinated tranches." },
+
+          { q: "True or false: Losses in a private-label deal are absorbed top-down, starting with the senior tranche.", choices: [
+            "True",
+            "False — losses are absorbed bottom-up by junior tranches first"
+          ], answer: 1, explain: "Subordination is the core form of credit enhancement: junior tranches absorb losses first, protecting seniors up to the subordinated balance." },
+
+          { q: "The 'residual' tranche typically:", choices: [
+            "Receives any cash flow left after all rated tranches are paid",
+            "Is paid before the seniors",
+            "Has the highest credit rating",
+            "Is guaranteed by the GSEs"
+          ], answer: 0, explain: "The residual (or 'equity') tranche is the last in line — it receives excess spread plus any leftover cash, and is the first to take losses." },
+
+          { q: "An 'OC' or 'overcollateralization' triggers when:", choices: [
+            "Pool collateral exceeds the bond balance, creating a credit cushion",
+            "Bond balance exceeds collateral",
+            "Borrowers prepay too quickly",
+            "There are no losses"
+          ], answer: 0, explain: "OC means the pool's principal balance exceeds bonds outstanding — that gap is a buffer that absorbs losses before any tranche is hit." }
+        ]
+      }
+    ]
+  },
+
+  // 3. AGENCY MBS
+  {
+    id: "agency",
+    title: "Agency MBS",
+    blurb: "Fannie, Freddie, Ginnie, and pass-throughs.",
+    units: [
+      {
+        id: "a1", name: "Fannie, Freddie, Ginnie",
+        questions: [
+          { q: "Fannie Mae and Freddie Mac are:", choices: [
+            "Government Sponsored Enterprises (GSEs)",
+            "Federal agencies",
+            "Private commercial banks",
+            "Foreign banks"
+          ], answer: 0, explain: "Fannie and Freddie are shareholder-owned GSEs chartered by Congress. They were placed in federal conservatorship in 2008." },
+
+          { q: "Ginnie Mae is:", choices: [
+            "A wholly-owned U.S. government corporation within HUD",
+            "A GSE like Fannie Mae",
+            "A private bank",
+            "A state regulator"
+          ], answer: 0, explain: "Ginnie Mae (GNMA) is a full-faith-and-credit U.S. government entity. Its guarantee carries explicit U.S. government backing — Fannie/Freddie's does not (technically)." },
+
+          { q: "Which agency's MBS carry an EXPLICIT U.S. government guarantee?", choices: [
+            "Fannie Mae",
+            "Freddie Mac",
+            "Ginnie Mae",
+            "All three"
+          ], answer: 2, explain: "Only Ginnie Mae carries explicit FF&C backing. Fannie/Freddie have an implicit guarantee bolstered by conservatorship — but no formal federal backing." },
+
+          { q: "True or false: Ginnie Mae itself originates and pools loans.", choices: [
+            "True",
+            "False — Ginnie guarantees pools of FHA/VA loans issued by approved issuers"
+          ], answer: 1, explain: "Ginnie doesn't originate or pool. It guarantees timely payment on pools of government-insured (FHA/VA/USDA) loans issued by approved private issuers." },
+
+          { q: "FHA and VA loans typically end up in pools guaranteed by:", choices: [
+            "Fannie Mae",
+            "Freddie Mac",
+            "Ginnie Mae",
+            "None — they aren't securitized"
+          ], answer: 2, explain: "FHA-insured and VA-guaranteed loans flow into Ginnie Mae pools, because they're government-insured loans needing a government-backed wrapper." }
+        ]
+      },
+      {
+        id: "a2", name: "Pass-Through Securities",
+        questions: [
+          { q: "A pass-through MBS passes through what to investors?", choices: [
+            "Monthly P&I cash flows from the underlying loans",
+            "Only interest, never principal",
+            "Only principal at maturity",
+            "Dividend payments"
+          ], answer: 0, explain: "Each month, scheduled P&I plus any prepayments are passed through (net of servicing/guarantee fees) to investors on a pro-rata basis." },
+
+          { q: "True or false: A pass-through investor receives principal only at the security's stated maturity.", choices: [
+            "True",
+            "False — principal arrives monthly as loans amortize and prepay"
+          ], answer: 1, explain: "Investors receive scheduled amortization AND unscheduled prepayments monthly, so the bond pays down well before its stated maturity." },
+
+          { q: "If the WAC is 5.00% and servicing+guarantee fees are 50bps, the pass-through coupon is:", choices: [
+            "5.50%",
+            "5.00%",
+            "4.50%",
+            "0.50%"
+          ], answer: 2, explain: "Pass-through coupon = WAC − servicing fee − guarantee fee = 5.00 − 0.50 = 4.50%." },
+
+          { q: "Which is NOT a typical fee deducted from WAC to arrive at the net coupon?", choices: [
+            "Servicing fee",
+            "Guarantee fee",
+            "Trustee fee",
+            "Investor management fee"
+          ], answer: 3, explain: "Net coupon to investors = WAC minus servicing, guarantee, and (small) trustee fees. There's no manager fee on a pass-through." },
+
+          { q: "A pass-through is most analogous to:", choices: [
+            "A bond whose cash flows depend on prepayment behavior",
+            "A zero-coupon bond",
+            "A perpetuity",
+            "A floating-rate note"
+          ], answer: 0, explain: "Pass-throughs are amortizing bonds where the actual cash flow timing depends on borrower prepayments — creating prepayment risk." }
+        ]
+      },
+      {
+        id: "a3", name: "The TBA Market",
+        questions: [
+          { q: "TBA stands for:", choices: [
+            "To-Be-Announced",
+            "Total Bond Allocation",
+            "Treasury Backed Asset",
+            "Tradeable Backed Agency"
+          ], answer: 0, explain: "TBA = To-Be-Announced. The buyer agrees to terms (coupon, settlement date, agency, etc.) without knowing the specific pools until 48 hours before settlement." },
+
+          { q: "Which is REQUIRED to be agreed at trade in a TBA?", choices: [
+            "Agency, coupon, term, settlement month, par amount",
+            "Specific loan-level borrower FICOs",
+            "Geographic concentration",
+            "Specific pool numbers"
+          ], answer: 0, explain: "TBA standardizes the 'good delivery' parameters. Specific pool details are revealed at allocation — and the seller delivers pools that meet the contract terms." },
+
+          { q: "Why does the TBA market exist?", choices: [
+            "To create deep, liquid trading in agency MBS without specific pool identification",
+            "To trade pre-foreclosure properties",
+            "To trade Treasury bonds",
+            "To create FHA insurance"
+          ], answer: 0, explain: "Forward TBA delivery lets dealers and originators hedge and finance pipelines efficiently. It makes agency MBS one of the world's most liquid bond markets." },
+
+          { q: "True or false: TBA contracts are typically settled monthly on SIFMA-published dates.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "SIFMA publishes a monthly settlement calendar by product. TBA trades settle on one of those standardized dates." },
+
+          { q: "A 'specified pool' trade is:", choices: [
+            "Trade of a particular MBS pool with known characteristics, usually at a premium to TBA",
+            "A short-dated Treasury",
+            "A whole loan trade",
+            "A private-label CMBS"
+          ], answer: 0, explain: "Specified pools trade with known loan characteristics (low loan balance, NY-only, high LTV, etc.) and often command a 'pay-up' over generic TBA." }
+        ]
+      },
+      {
+        id: "a4", name: "Conforming Loans",
+        questions: [
+          { q: "A conforming loan satisfies:", choices: [
+            "GSE underwriting guidelines and is within the conforming loan limit",
+            "FHA's insurance requirements",
+            "Only Ginnie Mae's standards",
+            "Only state-level requirements"
+          ], answer: 0, explain: "Conforming = meets Fannie/Freddie underwriting (LTV, DTI, FICO, doc) and falls under the annual conforming loan limit set by FHFA." },
+
+          { q: "A 'jumbo' loan is:", choices: [
+            "A loan above the conforming limit",
+            "A loan below FHA limits",
+            "A loan with a balloon payment",
+            "Any commercial loan"
+          ], answer: 0, explain: "Jumbos exceed the conforming limit, so they don't qualify for GSE purchase and are securitized in private-label deals or held on balance sheets." },
+
+          { q: "True or false: Conforming limits are uniform across all U.S. counties.", choices: [
+            "True",
+            "False — high-cost counties have elevated limits"
+          ], answer: 1, explain: "Standard conforming limits apply nationally, but high-cost areas (parts of CA, NY, HI, etc.) have higher 'ceiling' limits, sometimes ~50% above the base." },
+
+          { q: "Which is NOT typically required to be conforming?", choices: [
+            "LTV ≤ 80% (or PMI above that)",
+            "Loan amount within FHFA limit",
+            "Full documentation underwriting",
+            "Borrower must be a U.S. citizen"
+          ], answer: 3, explain: "GSEs purchase loans to non-citizens (with proper documentation/residency status). Citizenship per se is not a conforming requirement." },
+
+          { q: "A loan that is conforming AND has at least 20% down (or PMI) typically:", choices: [
+            "Is GSE-eligible",
+            "Requires Ginnie Mae backing",
+            "Must be a balloon",
+            "Cannot be securitized"
+          ], answer: 0, explain: "Such a loan checks the standard GSE-eligibility boxes — it can be sold to Fannie or Freddie and securitized in an agency pool." }
+        ]
+      },
+      {
+        id: "a5", name: "Agency Guarantees",
+        questions: [
+          { q: "Fannie/Freddie's guarantee covers:", choices: [
+            "Timely payment of principal and interest on the MBS",
+            "The borrower's monthly payment ability",
+            "Home appreciation",
+            "Property tax payments"
+          ], answer: 0, explain: "GSEs guarantee P&I on the security. Even if borrowers default, investors keep getting paid; the GSE makes the deal whole at significant cost." },
+
+          { q: "True or false: An agency MBS investor bears the credit risk of the underlying borrowers.", choices: [
+            "True",
+            "False — that risk is absorbed by the agency guarantee"
+          ], answer: 1, explain: "That's why agencies are 'rates' product — investors take interest rate and prepayment risk, but not credit risk." },
+
+          { q: "The 'g-fee' is:", choices: [
+            "The guarantee fee charged by the GSE/Ginnie for the credit wrapper",
+            "A government tax",
+            "A foreclosure fee",
+            "A geographic premium"
+          ], answer: 0, explain: "The g-fee compensates the agency for taking credit risk. It's deducted from the WAC alongside servicing to arrive at the pass-through coupon." },
+
+          { q: "Ginnie Mae's guarantee is BEST described as:", choices: [
+            "Full faith and credit of the U.S. government",
+            "Implicit but not legally binding",
+            "Backed only by state guarantees",
+            "Conditional on Fed approval"
+          ], answer: 0, explain: "Ginnie's guarantee is explicitly backed by the U.S. government — making Ginnies effectively credit-equivalent to Treasuries." },
+
+          { q: "True or false: A higher g-fee means the GSE earns less revenue from the deal.", choices: [
+            "True",
+            "False"
+          ], answer: 1, explain: "G-fees are the GSEs' core revenue stream — higher g-fees mean MORE revenue (in exchange for taking credit risk on the pool)." }
+        ]
+      }
+    ]
+  },
+
+  // 4. CMOs & Tranches
+  {
+    id: "cmo",
+    title: "CMOs & Tranches",
+    blurb: "Structuring cash flows into bonds with different risks.",
+    units: [
+      {
+        id: "c1", name: "Why Tranching?",
+        questions: [
+          { q: "A CMO is created to:", choices: [
+            "Redistribute pass-through cash flows into bonds with different risk/return profiles",
+            "Make loans larger",
+            "Avoid agency guarantees",
+            "Replace pass-throughs entirely"
+          ], answer: 0, explain: "CMOs slice and dice pass-through cash flows so investors can pick tranches that match their specific duration, prepayment, and credit appetites." },
+
+          { q: "CMO stands for:", choices: [
+            "Collateralized Mortgage Obligation",
+            "Corporate Mortgage Order",
+            "Conforming Market Operation",
+            "Capital Market Origination"
+          ], answer: 0, explain: "Collateralized Mortgage Obligation. It's a multi-tranche security collateralized by a pool of mortgages or pass-through MBS." },
+
+          { q: "True or false: A CMO can be backed by agency pass-throughs.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Most CMOs are agency CMOs collateralized by agency pass-throughs. Some are 'whole loan' CMOs collateralized by mortgages directly." },
+
+          { q: "Tranching primarily addresses:", choices: [
+            "Investors' different preferences over prepayment timing and average life",
+            "Credit risk only",
+            "Liquidity risk only",
+            "Inflation risk only"
+          ], answer: 0, explain: "Different investors want different cash flow profiles. Tranching creates bonds with short, medium, long, or stable average lives from the same pool." },
+
+          { q: "A CMO does NOT typically:", choices: [
+            "Reduce the total cash flow from the pool",
+            "Reallocate cash flow timing",
+            "Create tranches with varying average lives",
+            "Preserve total interest paid by borrowers"
+          ], answer: 0, explain: "CMOs reslice the same total cash flow. They don't change how much the underlying pool generates — only WHO receives what, WHEN." }
+        ]
+      },
+      {
+        id: "c2", name: "Sequential Pay",
+        questions: [
+          { q: "In a sequential-pay CMO, principal is paid:", choices: [
+            "To the most senior tranche first, then the next, etc.",
+            "Pro-rata across all tranches",
+            "Only at the final maturity",
+            "Only to the residual"
+          ], answer: 0, explain: "Sequential pay sends ALL principal cash flow (scheduled + prepayment) to the first tranche until it's retired, then to the next, and so on." },
+
+          { q: "If a sequential CMO has tranches A, B, C, D, which has the SHORTEST average life?", choices: [
+            "A (the first sequential)",
+            "B",
+            "C",
+            "D"
+          ], answer: 0, explain: "Tranche A retires first because it receives ALL principal until paid off. Each subsequent tranche has progressively longer average life." },
+
+          { q: "True or false: Interest is paid sequentially in a sequential CMO.", choices: [
+            "True",
+            "False — interest is generally paid pro-rata to all outstanding tranches"
+          ], answer: 1, explain: "Interest accrues on each tranche's outstanding balance and is paid monthly. Principal is what's directed sequentially." },
+
+          { q: "A Z bond (or accrual bond) in a CMO:", choices: [
+            "Accrues interest rather than receiving it in cash early on",
+            "Pays interest first to the residual",
+            "Has the shortest maturity",
+            "Is always insured separately"
+          ], answer: 0, explain: "A Z tranche accrues its interest (added to its principal balance) while earlier tranches are paid. Once they retire, the Z starts receiving cash." },
+
+          { q: "Sequentials are popular with investors who want:", choices: [
+            "Specific bullet-like maturity exposures",
+            "Maximum prepayment uncertainty",
+            "No yield premium",
+            "Pure credit risk exposure"
+          ], answer: 0, explain: "Sequentials create bond classes with shorter, more bond-like average lives — useful for liability matching and bullet-like investing." }
+        ]
+      },
+      {
+        id: "c3", name: "PAC & Support Tranches",
+        questions: [
+          { q: "PAC stands for:", choices: [
+            "Planned Amortization Class",
+            "Pre-Allocated Coupon",
+            "Pool Allocation Certificate",
+            "Principal Adjusted Class"
+          ], answer: 0, explain: "Planned Amortization Class. PACs offer a planned principal payment schedule that holds within a band of prepayment speeds." },
+
+          { q: "A PAC's stable cash flow profile is achieved by:", choices: [
+            "Pairing with a 'support' (companion) tranche that absorbs prepayment variability",
+            "Eliminating prepayments",
+            "Issuing only fixed amounts",
+            "GSE intervention"
+          ], answer: 0, explain: "Support tranches take the prepayment variability so the PAC sees a stable schedule across a range of speeds (the 'PAC band')." },
+
+          { q: "True or false: If prepayments stay within the PAC band, the PAC investor gets the planned schedule.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Within the band, the PAC's planned schedule is maintained. Outside the band, the PAC schedule can break — usually when prepays are extreme on either side." },
+
+          { q: "If prepayments are MUCH faster than expected, the support tranche:", choices: [
+            "Gets called away early",
+            "Earns extra coupon",
+            "Receives less principal",
+            "Defaults"
+          ], answer: 0, explain: "Fast prepays drain principal through the support tranche, retiring it sooner. If supports pay off entirely, the PAC schedule starts to break." },
+
+          { q: "Support tranches are typically:", choices: [
+            "More volatile in average life than PACs",
+            "Less volatile than PACs",
+            "Always government-guaranteed",
+            "Always shorter than PACs"
+          ], answer: 0, explain: "Supports absorb extension/contraction risk on behalf of PACs. As a result, their average lives are highly sensitive to actual prepayment speeds." }
+        ]
+      },
+      {
+        id: "c4", name: "IO & PO Strips",
+        questions: [
+          { q: "An IO strip receives:", choices: [
+            "Interest-only cash flows from the pool",
+            "Principal-only cash flows",
+            "Both equally",
+            "Fixed coupons only"
+          ], answer: 0, explain: "Interest-Only strips get the interest component of the pool's cash flows. They have no principal balance — only a notional balance for calculating interest." },
+
+          { q: "A PO strip receives:", choices: [
+            "Only the principal cash flows",
+            "Only the interest cash flows",
+            "Both equally",
+            "Subordinated payments"
+          ], answer: 0, explain: "Principal-Only strips get the principal cash flows. POs trade at a deep discount to par and accrete to par as principal is paid down." },
+
+          { q: "When rates fall sharply and prepayments spike, an IO strip:", choices: [
+            "Loses value (less interest to collect)",
+            "Gains value",
+            "Is unchanged",
+            "Receives a guarantee payment"
+          ], answer: 0, explain: "Faster prepayments mean less interest is paid over the life — IOs hate fast prepays. POs, by contrast, love them (principal returns sooner)." },
+
+          { q: "True or false: POs benefit from faster prepayments.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "POs return principal as fast as the pool pays down. Faster prepays mean PO holders receive their principal back sooner — boosting yield." },
+
+          { q: "IOs are an example of which type of risk exposure?", choices: [
+            "Negative duration (price rises as rates rise)",
+            "Pure inflation hedge",
+            "Equity-like growth",
+            "Currency exposure"
+          ], answer: 0, explain: "IOs often have negative effective duration — when rates rise, prepays slow, and the IO's interest cash flows last longer, raising the strip's value." }
+        ]
+      },
+      {
+        id: "c5", name: "Z Bonds & Floaters",
+        questions: [
+          { q: "A Z (accrual) bond receives no interest cash payments while:", choices: [
+            "Earlier tranches are still being paid down",
+            "It's the most senior tranche",
+            "Rates are above a strike",
+            "Prepayments are zero"
+          ], answer: 0, explain: "The Z accrues its coupon (adding to its principal balance) while interest that would have been paid to it goes to retire earlier tranches faster." },
+
+          { q: "A CMO floater:", choices: [
+            "Pays a coupon that floats with a reference index (e.g., SOFR)",
+            "Floats principal on water",
+            "Is a fixed-rate Z bond",
+            "Is a type of PAC"
+          ], answer: 0, explain: "Floaters reset their coupon periodically against a benchmark. They're often paired with inverse floaters whose coupons move opposite the index." },
+
+          { q: "True or false: Floaters typically have a cap on their coupon.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Because the underlying collateral pays a fixed coupon, the floater coupon is capped at a level that keeps the structure self-funding." },
+
+          { q: "An inverse floater:", choices: [
+            "Pays a coupon that moves inversely to a reference rate",
+            "Pays no coupon",
+            "Tracks Treasury yields one-for-one",
+            "Is always government-guaranteed"
+          ], answer: 0, explain: "Inverse floaters: coupon goes down when the reference rate goes up. They're leveraged bets on rates falling and are typically more volatile." },
+
+          { q: "Floater + inverse floater pair are designed to:", choices: [
+            "Reslice a fixed-coupon tranche into a floating and inverse-floating component",
+            "Create credit enhancement",
+            "Add prepayment protection",
+            "Eliminate duration"
+          ], answer: 0, explain: "The pair's combined coupons replicate the underlying fixed coupon, allowing the structure to issue tranches with very different rate sensitivities." }
+        ]
+      },
+      {
+        id: "c6", name: "CMO Structuring",
+        questions: [
+          { q: "Tranching trade-offs include:", choices: [
+            "Greater customization for investors at the cost of complexity",
+            "Lower total cash flow",
+            "Higher credit risk for the GSE",
+            "Eliminating prepayment risk for everyone"
+          ], answer: 0, explain: "Tranching is a redistribution exercise — risks are moved, not eliminated. Some tranches end up safer, but their counterparts (e.g., supports, IOs) bear more risk." },
+
+          { q: "True or false: A 'sticky' or 'TAC' bond is a Targeted Amortization Class with a single-speed target.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "TACs target a single PSA speed (vs. PACs' band). They protect against contraction but not extension — or vice versa." },
+
+          { q: "A 'super-senior' tranche in a private-label deal:", choices: [
+            "Has additional subordination below the original senior tranche for extra cushion",
+            "Pays a higher coupon than juniors",
+            "Is government-guaranteed",
+            "Is the lowest-rated tranche"
+          ], answer: 0, explain: "Super-seniors sit above other AAA tranches via subordination of additional bonds, increasing the credit cushion against losses." },
+
+          { q: "Which is NOT a typical CMO tranche?", choices: [
+            "PAC",
+            "Sequential",
+            "IO",
+            "REIT"
+          ], answer: 3, explain: "REITs are real estate investment trusts — public corporations, not CMO tranches. PAC, sequential, IO, support, Z, floater are all common." },
+
+          { q: "More tranches in a CMO generally means:", choices: [
+            "More structural complexity but more tailored investor offerings",
+            "Less total complexity",
+            "Lower fees",
+            "Smaller pool size"
+          ], answer: 0, explain: "Adding tranches allows more precise investor targeting but adds modeling complexity, legal cost, and (sometimes) reduces liquidity per tranche." }
+        ]
+      }
+    ]
+  },
+
+  // 5. Risk & Valuation
+  {
+    id: "risk",
+    title: "Risk & Valuation",
+    blurb: "Prepayment, duration, convexity, and OAS.",
+    units: [
+      {
+        id: "r1", name: "Prepayment Risk",
+        questions: [
+          { q: "Prepayment risk is:", choices: [
+            "Risk that borrowers pay off loans faster (or slower) than expected",
+            "Risk that interest rates change",
+            "Risk that borrowers default",
+            "Risk of currency depreciation"
+          ], answer: 0, explain: "Prepayments alter the timing and magnitude of cash flows to MBS investors. Faster = early return of principal; slower = longer-than-expected exposure." },
+
+          { q: "Borrowers tend to prepay FASTER when:", choices: [
+            "Interest rates fall and they can refinance cheaper",
+            "Rates rise",
+            "Home prices fall",
+            "Unemployment spikes"
+          ], answer: 0, explain: "Falling rates create a refinance incentive — borrowers refi into a cheaper mortgage, prepaying their old one. This is the dominant driver." },
+
+          { q: "True or false: Faster prepayments are always good for MBS investors.", choices: [
+            "True",
+            "False"
+          ], answer: 1, explain: "Faster prepays return principal early, often when rates are LOW — forcing the investor to reinvest at lower yields. Bad for premium bonds, good for discount POs." },
+
+          { q: "Slower-than-expected prepayments cause:", choices: [
+            "Extension risk — bond lasts longer than expected",
+            "Contraction risk",
+            "Default risk",
+            "No risk"
+          ], answer: 0, explain: "When rates rise and refis dry up, expected prepays slow and MBS investors are stuck holding longer-duration paper as the price falls." },
+
+          { q: "Drivers of prepayment behavior include:", choices: [
+            "Refi incentive, seasonality, housing turnover, age of loan, burnout",
+            "Only refi incentive",
+            "Only home prices",
+            "Only LTV"
+          ], answer: 0, explain: "Models include refi incentive (rate gap), seasoning, burnout (sticky borrowers who didn't refi when they could), turnover (job/move-related sales), and seasonality." }
+        ]
+      },
+      {
+        id: "r2", name: "Extension & Contraction",
+        questions: [
+          { q: "Contraction risk in MBS is:", choices: [
+            "Cash flows arriving earlier than expected due to fast prepayments",
+            "Cash flows arriving late",
+            "Default risk",
+            "Liquidity risk"
+          ], answer: 0, explain: "Contraction = bond duration shortens because prepayments accelerate. Generally happens when rates fall." },
+
+          { q: "Extension risk in MBS is:", choices: [
+            "Cash flows arriving slower than expected, lengthening the bond",
+            "Bond being called early",
+            "GSE downgrade",
+            "Borrower default"
+          ], answer: 0, explain: "Extension = expected average life extends because prepayments slow. Often happens when rates rise and refis evaporate." },
+
+          { q: "True or false: MBS investors holding premium bonds are most hurt by contraction.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Premium bonds have a coupon above current rates. Fast prepays return par sooner — investor loses the premium they paid relative to what they recover." },
+
+          { q: "Discount MBS bonds benefit from:", choices: [
+            "Fast prepayments returning par sooner",
+            "Slow prepayments",
+            "Rising defaults",
+            "Higher servicing fees"
+          ], answer: 0, explain: "Discount bonds trade below par. Fast prepays mean the investor recovers par (more than they paid) sooner — boosting realized yield." },
+
+          { q: "An IO is most hurt by:", choices: [
+            "Fast prepayments",
+            "Slow prepayments",
+            "Defaults",
+            "Trustee fees"
+          ], answer: 0, explain: "IOs collect interest on outstanding balance. Fast prepays shrink the balance fast, shortening interest collection." }
+        ]
+      },
+      {
+        id: "r3", name: "PSA & CPR",
+        questions: [
+          { q: "CPR stands for:", choices: [
+            "Conditional Prepayment Rate (annualized prepayment fraction)",
+            "Coupon Pricing Ratio",
+            "Credit Portfolio Risk",
+            "Commercial Prepayment Reserve"
+          ], answer: 0, explain: "CPR is the annualized fraction of the remaining pool expected to prepay. SMM (Single Monthly Mortality) is the monthly equivalent." },
+
+          { q: "100% PSA means:", choices: [
+            "0.2% CPR in month 1, ramping to 6% CPR by month 30 and staying flat",
+            "100% CPR every month",
+            "100% defaults",
+            "100% of loans refinance"
+          ], answer: 0, explain: "PSA is the prepayment ramp. 100 PSA = 0.2% CPR in month 1, +0.2% per month until reaching 6% in month 30. 200 PSA doubles the ramp." },
+
+          { q: "True or false: 200 PSA represents twice the prepayment speed of 100 PSA.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "PSA scales linearly. 50 PSA is half-speed; 200 PSA is double-speed; 300 PSA is triple, etc." },
+
+          { q: "SMM is:", choices: [
+            "The Single Monthly Mortality rate — monthly prepayment fraction",
+            "Standardized Mortgage Margin",
+            "Servicing Master Mode",
+            "Secondary Market Multiplier"
+          ], answer: 0, explain: "SMM = 1 − (1 − CPR)^(1/12). It's the fraction of remaining balance prepaying in a single month, used in monthly cash flow projections." },
+
+          { q: "PSA was originally developed by:", choices: [
+            "Public Securities Association (now SIFMA)",
+            "The Fed",
+            "Fannie Mae",
+            "FHFA"
+          ], answer: 0, explain: "The Public Securities Association created the model in the 1980s. PSA → BMA → SIFMA via subsequent industry mergers." }
+        ]
+      },
+      {
+        id: "r4", name: "Duration & Convexity",
+        questions: [
+          { q: "Effective duration measures:", choices: [
+            "Sensitivity of price to small parallel changes in yield, accounting for cash flow changes",
+            "Time to maturity",
+            "Default probability",
+            "Yield to call"
+          ], answer: 0, explain: "Effective duration captures the price change for a parallel rate shift, including how prepayment-driven cash flows shift with rates — critical for MBS." },
+
+          { q: "MBS typically exhibit:", choices: [
+            "Negative convexity",
+            "Positive convexity",
+            "Zero convexity",
+            "Linear price/yield response"
+          ], answer: 0, explain: "When rates fall, MBS extension is limited (borrowers refi away). When rates rise, MBS extend. So price compresses on both sides — negative convexity." },
+
+          { q: "True or false: For a small parallel rate shift, the price impact of duration dominates convexity.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Duration is the first-order (linear) effect. Convexity is the second-order curvature, more relevant for larger shifts." },
+
+          { q: "Spread duration measures:", choices: [
+            "Sensitivity of price to changes in spread (not rates)",
+            "Time to spread settlement",
+            "How wide the bid-ask is",
+            "Spread of prepayment speeds"
+          ], answer: 0, explain: "Spread duration isolates spread changes (e.g., OAS or nominal spread) from the underlying Treasury curve — useful for relative value." },
+
+          { q: "Key rate durations:", choices: [
+            "Decompose duration into sensitivities along the yield curve",
+            "Are the duration of bank notes",
+            "Apply only to floaters",
+            "Are unrelated to MBS"
+          ], answer: 0, explain: "KRDs partition total duration into bucket-level exposures (e.g., 2y, 5y, 10y, 30y), capturing curve-shape risk that parallel duration misses." }
+        ]
+      },
+      {
+        id: "r5", name: "OAS",
+        questions: [
+          { q: "OAS stands for:", choices: [
+            "Option-Adjusted Spread",
+            "Open Asset Subscription",
+            "Optimal Asset Strategy",
+            "Overall Average Spread"
+          ], answer: 0, explain: "OAS is the spread over the benchmark curve after stripping out the value of the embedded prepayment option using a stochastic interest-rate model." },
+
+          { q: "OAS is used to compare:", choices: [
+            "Relative value across bonds with embedded options",
+            "Servicing fees",
+            "GSE g-fees",
+            "Borrower FICOs"
+          ], answer: 0, explain: "Because MBS embed a prepayment option, raw spread overstates compensation. OAS adjusts for that, giving a cleaner like-for-like comparison." },
+
+          { q: "True or false: A higher OAS (all else equal) implies a cheaper bond.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Higher OAS = more compensation per unit of risk after accounting for the option — generally relatively cheaper. (Subject to model assumptions.)" },
+
+          { q: "OAS depends on:", choices: [
+            "The interest rate model, vol assumptions, and prepayment model",
+            "Only the bond price",
+            "Only treasury yields",
+            "Only the issuer"
+          ], answer: 0, explain: "OAS is model-derived. Different vol surfaces and prepay models produce different OAS values — so OAS comparisons require consistent models." },
+
+          { q: "Nominal spread vs OAS: which captures the prepayment option cost?", choices: [
+            "OAS does; nominal spread does not",
+            "Both equally",
+            "Neither",
+            "Nominal does only"
+          ], answer: 0, explain: "Nominal spread is just yield minus a benchmark — it doesn't adjust for the embedded option. OAS does." }
+        ]
+      },
+      {
+        id: "r6", name: "Negative Convexity",
+        questions: [
+          { q: "MBS show negative convexity because:", choices: [
+            "Borrowers prepay when rates fall, capping upside",
+            "Rates always rise",
+            "GSEs require it",
+            "Servicers absorb gains"
+          ], answer: 0, explain: "The borrower has a free option to prepay. When that option is in-the-money (rates fall, refi attractive), MBS price upside is capped — creating negative convexity." },
+
+          { q: "True or false: Negative convexity is undesirable from an investor's perspective.", choices: [
+            "True — but it's compensated with higher yields",
+            "False"
+          ], answer: 0, explain: "Negative convexity is undesirable but well-known and priced in. Investors demand higher OAS as compensation for being short the prepayment option." },
+
+          { q: "A Treasury bond has:", choices: [
+            "Positive convexity",
+            "Negative convexity",
+            "Zero convexity",
+            "Variable convexity"
+          ], answer: 0, explain: "Treasuries have no embedded options (in general). Their price-yield curve is convex (positive) — investors benefit from large moves in either direction." },
+
+          { q: "Hedging MBS convexity often involves:", choices: [
+            "Buying options or dynamically adjusting Treasury hedges",
+            "Selling more MBS",
+            "Issuing equity",
+            "Buying real estate directly"
+          ], answer: 0, explain: "MBS portfolios hedge via swaptions, options on futures, or dynamic delta-hedging with Treasuries/futures to manage convexity exposure." },
+
+          { q: "The 'convexity cost' refers to:", choices: [
+            "The expected hedging or option premium needed to neutralize negative convexity",
+            "Borrower closing costs",
+            "GSE servicing fees",
+            "The cost of FICO data"
+          ], answer: 0, explain: "Convexity cost is roughly the option premium an investor would 'pay' to be made whole for the embedded prepay option — it's a key driver of OAS expectations." }
+        ]
+      }
+    ]
+  },
+
+  // 6. Non-Agency & CMBS
+  {
+    id: "nonagency",
+    title: "Non-Agency & CMBS",
+    blurb: "Private-label RMBS, CMBS, and credit risk.",
+    units: [
+      {
+        id: "n1", name: "Private-Label RMBS",
+        questions: [
+          { q: "Private-label RMBS:", choices: [
+            "Securitize loans that don't fit GSE criteria; carry no agency guarantee",
+            "Are guaranteed by Ginnie Mae",
+            "Are issued by the Fed",
+            "Are only for commercial loans"
+          ], answer: 0, explain: "Private-label deals are issued by private institutions and securitize jumbo, non-prime, or other non-conforming residential loans. Credit risk is borne by investors." },
+
+          { q: "True or false: Private-label RMBS investors face direct credit risk on the underlying loans.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Without an agency guarantee, structural credit enhancement (subordination, OC, excess spread, MI) is what protects senior bondholders." },
+
+          { q: "Subordination as credit enhancement means:", choices: [
+            "Junior bonds absorb losses first, protecting seniors",
+            "Senior bonds default first",
+            "All bonds default at the same time",
+            "Bonds are paid pro-rata"
+          ], answer: 0, explain: "The capital stack is ordered — losses hit equity, then mezzanine, then mezz-AAA, then super-senior. Each layer protects the one above." },
+
+          { q: "Excess spread is:", choices: [
+            "Coupon income on the pool minus bond coupons and fees — a buffer for losses",
+            "An extra payment to investors",
+            "A type of CMO tranche",
+            "A government subsidy"
+          ], answer: 0, explain: "If the pool's WAC exceeds the weighted-average bond coupon plus fees, the excess spread can be used to cover losses or build OC." },
+
+          { q: "Which is NOT a typical credit enhancement in private-label deals?", choices: [
+            "Subordination",
+            "Overcollateralization (OC)",
+            "Excess spread",
+            "Treasury guarantee"
+          ], answer: 3, explain: "There's no Treasury guarantee on private-label deals. Credit support comes from subordination, OC, excess spread, mortgage insurance, or financial guarantees (rare)." }
+        ]
+      },
+      {
+        id: "n2", name: "Subprime & Alt-A",
+        questions: [
+          { q: "Subprime loans typically have:", choices: [
+            "Lower FICO scores and higher rates",
+            "Lower rates than prime",
+            "Only Ginnie Mae backing",
+            "No interest"
+          ], answer: 0, explain: "Subprime borrowers had credit profiles (FICO, DTI, doc) below prime standards, and loans carried higher rates and stricter terms to compensate." },
+
+          { q: "Alt-A loans were generally:", choices: [
+            "Between prime and subprime — prime FICOs but other irregularities (e.g., low/no doc)",
+            "Subprime only",
+            "Always conforming",
+            "Always agency-guaranteed"
+          ], answer: 0, explain: "Alt-A borrowers had good credit but limited documentation, high LTV, or investor properties — pushing them outside the agency box." },
+
+          { q: "True or false: Subprime/Alt-A loans played a major role in the 2008 financial crisis.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Rapid issuance of poorly-underwritten subprime/Alt-A loans into private-label RMBS (and CDOs of those tranches) created severe losses when home prices fell." },
+
+          { q: "Layered risk in subprime referred to:", choices: [
+            "Multiple risk factors stacked in one loan (low FICO + high LTV + low doc)",
+            "Two-tranche structures",
+            "Government layering rules",
+            "Subordinated insurance"
+          ], answer: 0, explain: "When several risk factors compounded in a single loan, default probability multiplied — yet underwriting often ignored these correlations." },
+
+          { q: "Today's non-QM (non-Qualified Mortgage) market is most analogous to:", choices: [
+            "A modern, more conservatively structured cousin of pre-crisis Alt-A",
+            "Subprime exactly as in 2006",
+            "Ginnie Mae",
+            "Agency CMOs"
+          ], answer: 0, explain: "Non-QM serves borrowers outside the QM box (e.g., self-employed, investors) but with stronger documentation and higher equity than 2006-era loans." }
+        ]
+      },
+      {
+        id: "n3", name: "CMBS Basics",
+        questions: [
+          { q: "CMBS are backed by:", choices: [
+            "Commercial mortgages (office, retail, multifamily, hotel, etc.)",
+            "Residential mortgages only",
+            "Auto loans",
+            "Student loans"
+          ], answer: 0, explain: "CMBS pools loans on income-producing commercial real estate. The cash flows from the underlying property service the loan." },
+
+          { q: "True or false: Most CMBS loans are non-recourse to the borrower.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Most commercial real estate loans in CMBS deals are non-recourse — recovery is limited to the property and any guarantees (e.g., bad-boy carveouts)." },
+
+          { q: "A 'conduit' CMBS deal is typically:", choices: [
+            "A diversified pool of many commercial loans from different sponsors",
+            "A single-borrower deal",
+            "A residential MBS",
+            "A small private placement"
+          ], answer: 0, explain: "Conduits pool 50+ loans across borrowers and property types to diversify. Single-asset/single-borrower (SASB) deals are concentrated on one big asset." },
+
+          { q: "A key CMBS metric is:", choices: [
+            "Debt Service Coverage Ratio (DSCR)",
+            "FICO score",
+            "PMI level",
+            "Borrower DTI"
+          ], answer: 0, explain: "DSCR = net operating income / debt service. Above 1.0 means the property generates enough cash to cover debt service — higher is safer." },
+
+          { q: "True or false: CMBS prepayment risk is generally lower than RMBS.", choices: [
+            "True — CMBS loans usually have lockout/yield maintenance/defeasance protections",
+            "False"
+          ], answer: 0, explain: "CMBS loans have strong prepayment protections (yield maintenance, defeasance, lockout periods), so prepayment risk is much lower than in RMBS." }
+        ]
+      },
+      {
+        id: "n4", name: "Credit Enhancement",
+        questions: [
+          { q: "Credit enhancement exists to:", choices: [
+            "Protect senior bondholders from losses on underlying assets",
+            "Increase prepayment speeds",
+            "Reduce interest payments",
+            "Replace servicers"
+          ], answer: 0, explain: "CE creates a cushion that absorbs losses before they reach senior bonds, supporting higher ratings on the senior tranches." },
+
+          { q: "Internal credit enhancement includes:", choices: [
+            "Subordination, OC, excess spread",
+            "Insurance from a third party",
+            "GSE guarantee",
+            "Treasury wrap"
+          ], answer: 0, explain: "Internal CE is built from the deal's own structure. External CE is provided by third parties (monoline wraps, surety, MI, GSE guarantee)." },
+
+          { q: "External credit enhancement includes:", choices: [
+            "Monoline insurance, surety bonds, third-party guarantees",
+            "Subordination",
+            "OC",
+            "Excess spread"
+          ], answer: 0, explain: "External CE relies on a third-party promise of payment. Monoline downgrades hit many wrapped bonds during the GFC, exposing the weakness of relying on external CE." },
+
+          { q: "True or false: A deal can use BOTH internal and external credit enhancement.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Many deals stack subordination AND mortgage insurance (e.g., on individual loans) AND excess spread — layering protection across mechanisms." },
+
+          { q: "If you DOUBLE subordination on a senior tranche, you generally:", choices: [
+            "Increase the senior's credit cushion against pool losses",
+            "Increase its yield",
+            "Lower its rating",
+            "Increase prepayment speeds"
+          ], answer: 0, explain: "More subordination = more loss-absorbing capacity below the senior = more credit support, all else equal." }
+        ]
+      },
+      {
+        id: "n5", name: "Lessons from 2008",
+        questions: [
+          { q: "A major cause of MBS losses in 2008 was:", choices: [
+            "Deteriorating underwriting (especially subprime), falling home prices, and correlated defaults",
+            "GSE g-fees being too high",
+            "Excess prepayment penalties",
+            "Treasury yields rising too fast"
+          ], answer: 0, explain: "Loose origination + a housing price reversal + correlated defaults across geographies crushed assumptions baked into credit models." },
+
+          { q: "True or false: Pre-crisis credit ratings overestimated the safety of senior private-label tranches.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "AAA tranches of subprime RMBS and CDOs suffered material losses despite their original ratings — exposing model weaknesses around correlation and HPA assumptions." },
+
+          { q: "A CDO of MBS:", choices: [
+            "Pools MBS tranches (often subordinate) into a new securitization",
+            "Is a kind of CMBS",
+            "Is the same as a Ginnie pool",
+            "Is a Treasury derivative"
+          ], answer: 0, explain: "CDOs of MBS resecuritized lower-rated MBS tranches, creating new 'AAA' bonds via further subordination — assumptions that broke down in 2008." },
+
+          { q: "Dodd-Frank and post-crisis reforms introduced:", choices: [
+            "Risk retention (skin in the game) and stricter QM rules",
+            "More aggressive origination",
+            "Less disclosure",
+            "Repeal of all regulation"
+          ], answer: 0, explain: "Reforms imposed 5% risk retention on sponsors of many securitizations and defined 'Qualified Mortgage' standards to constrain risky lending." },
+
+          { q: "True or false: Agency MBS senior bonds suffered material losses in 2008.", choices: [
+            "True",
+            "False — the agencies (incl. those in conservatorship) continued to pay P&I"
+          ], answer: 1, explain: "Despite massive losses at Fannie/Freddie themselves, the agencies (with Treasury support post-conservatorship) continued making timely P&I payments on agency MBS." }
+        ]
+      }
+    ]
+  },
+
+  // 7. Trading & Markets
+  {
+    id: "trading",
+    title: "Trading & Markets",
+    blurb: "Pricing, hedging, and how the market works.",
+    units: [
+      {
+        id: "t1", name: "Pricing & Yields",
+        questions: [
+          { q: "MBS prices are most commonly quoted in:", choices: [
+            "Points of par (e.g., 101-08 = 101 and 8/32)",
+            "Yield only",
+            "Dollar price per loan",
+            "Percentage of borrower income"
+          ], answer: 0, explain: "Like Treasuries, MBS prices are quoted in 32nds of a point of par. 101-08 means 101 + 8/32 = 101.25% of par." },
+
+          { q: "Yield-to-maturity on MBS is somewhat misleading because:", choices: [
+            "The actual cash flow timing depends on prepayments, which are uncertain",
+            "MBS pay no coupons",
+            "Coupons are floating",
+            "Yields don't apply to bonds"
+          ], answer: 0, explain: "MBS yield calculations assume a prepayment speed. The realized yield can differ significantly if actual prepays differ from the assumption." },
+
+          { q: "True or false: A 'yield book' yield assumes a specific PSA assumption.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "Vendor-yield calculations require a prepayment assumption (often 'street median' or vendor-model output)." },
+
+          { q: "An MBS dollar price ABOVE 100 is:", choices: [
+            "A premium bond — coupon above current market levels",
+            "A discount bond",
+            "Insolvent",
+            "Always defaulted"
+          ], answer: 0, explain: "Above par = premium. The investor paid more than they'll get back as principal — they're betting on coupon outpacing the premium amortization." },
+
+          { q: "An MBS yield is sensitive to the prepayment assumption. If actual prepays beat the assumption for a premium bond:", choices: [
+            "Realized yield is lower than assumed",
+            "Realized yield is higher",
+            "Yield is unchanged",
+            "Bond defaults"
+          ], answer: 0, explain: "Premium bonds priced above par lose value when prepays accelerate — investor recovers par faster, losing premium they paid. Lower realized yield." }
+        ]
+      },
+      {
+        id: "t2", name: "Specified Pools",
+        questions: [
+          { q: "Specified pools trade at a 'pay-up' over TBA when they have:", choices: [
+            "Characteristics likely to slow prepayments (e.g., low loan balances)",
+            "Higher prepayment speeds",
+            "Unusual default risk",
+            "Lower coupons"
+          ], answer: 0, explain: "Investors pay up for pools with structural prepayment protection: low loan balance, high LTV, NY/state-specific, investor properties, etc." },
+
+          { q: "Why are LOW loan balance (LLB) pools prepayment-protected?", choices: [
+            "Small loans have lower dollar savings from refinancing, reducing refi incentive",
+            "Small loans always default",
+            "Small loans pay higher rates",
+            "Small loans aren't securitizable"
+          ], answer: 0, explain: "Refinancing has fixed costs (~$3-5k). On a $50k loan, those costs eat most of the rate-savings — so LLB borrowers refi less, leading to slower prepays." },
+
+          { q: "True or false: Higher FICO borrowers always prepay faster.", choices: [
+            "True",
+            "False — high FICO is mixed; the dominant pay-up factors are loan size, geography, occupancy",
+            "Only true for first-lien"
+          ], answer: 1, explain: "High FICO borrowers can refi easily and may prepay faster — but the strongest pay-up factors empirically are loan balance, geography, and occupancy/property type." },
+
+          { q: "NY-specific pools tend to:", choices: [
+            "Trade at a pay-up due to high refi taxes and friction",
+            "Trade at a discount",
+            "Be illiquid by law",
+            "Be CMBS only"
+          ], answer: 0, explain: "New York's mortgage recording tax and refi friction discourage refis — slowing prepays. Investors pay up for that protection." },
+
+          { q: "Investor (non-owner-occupied) pools are typically:", choices: [
+            "Faster-prepaying (more turnover, less owner attachment)",
+            "Slower",
+            "Same as primary residences",
+            "Not securitized"
+          ], answer: 0, explain: "Investor properties turn over faster and refi more aggressively — generally treated as faster-paying than owner-occupied." }
+        ]
+      },
+      {
+        id: "t3", name: "Hedging MBS",
+        questions: [
+          { q: "MBS portfolio duration is typically hedged with:", choices: [
+            "Treasury futures, swaps, or short Treasuries",
+            "Equity futures",
+            "FX forwards",
+            "Commodity options"
+          ], answer: 0, explain: "Standard duration hedges use Treasury cash, futures, or interest rate swaps — instruments with deep liquidity in rate space." },
+
+          { q: "MBS convexity hedges often involve:", choices: [
+            "Swaptions, options on futures, or dynamic delta hedging",
+            "Currency forwards",
+            "Cryptocurrencies",
+            "Buying more MBS"
+          ], answer: 0, explain: "Because MBS are short the prepay option, buying options-like instruments (swaptions, options on futures) provides convexity to offset that exposure." },
+
+          { q: "True or false: Mortgage portfolios often re-hedge dynamically as rates move because of negative convexity.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "As rates move, MBS effective duration changes — so hedge ratios change too. This dynamic rebalancing can amplify rate moves (the 'convexity trade')." },
+
+          { q: "The 'convexity vortex' refers to:", choices: [
+            "Forced selling/buying of Treasuries by MBS investors as rates move, amplifying volatility",
+            "An ocean phenomenon",
+            "A type of CMO",
+            "A regulator action"
+          ], answer: 0, explain: "When rates fall, MBS shorten — investors must BUY Treasuries to maintain duration, pushing rates lower. Vice versa on rate rises. A famous feedback loop." },
+
+          { q: "Spread hedging an MBS portfolio means:", choices: [
+            "Offsetting changes in OAS or nominal spread, separate from rate moves",
+            "Buying real estate",
+            "Hedging only duration",
+            "Hedging FX"
+          ], answer: 0, explain: "Spread hedges target moves in mortgage OAS/spreads — often involving long/short relative-value positions across MBS coupons or vs. other spread products." }
+        ]
+      },
+      {
+        id: "t4", name: "Market Participants",
+        questions: [
+          { q: "The largest holders of agency MBS historically include:", choices: [
+            "The Federal Reserve, banks, money managers, and overseas investors",
+            "Only hedge funds",
+            "Only small retail investors",
+            "Only the GSEs themselves"
+          ], answer: 0, explain: "Agency MBS are held by the Fed (via QE), commercial banks (HTM/AFS), large money managers, GSEs (their retained portfolios), and foreign central banks." },
+
+          { q: "Mortgage REITs:", choices: [
+            "Are levered investors in MBS that distribute most income as dividends",
+            "Originate loans only",
+            "Are unrelated to MBS",
+            "Are part of the Fed"
+          ], answer: 0, explain: "mREITs (e.g., AGNC, NLY) hold large MBS portfolios financed via repo, hedge interest rate risk, and distribute mostly all taxable income as dividends." },
+
+          { q: "True or false: The Fed's QE programs included large purchases of agency MBS.", choices: [
+            "True",
+            "False"
+          ], answer: 0, explain: "QE1 (2008-2010), QE3 (2012-2014), and the 2020 pandemic response all included MBS purchases. At peak, the Fed held over $2.7T in agency MBS." },
+
+          { q: "A 'roll' in TBA trading is:", choices: [
+            "Selling current-month TBA and buying next-month TBA, often to finance positions",
+            "A type of mortgage product",
+            "A regulatory filing",
+            "An IO strip"
+          ], answer: 0, explain: "Dollar rolls (selling one month and simultaneously buying the next) effectively finance MBS positions in the TBA market. The 'roll specialness' is a yield." },
+
+          { q: "Which is NOT a typical TBA participant?", choices: [
+            "Originators hedging pipelines",
+            "Money managers building positions",
+            "GSE securitizers",
+            "Retail homeowners trading directly"
+          ], answer: 3, explain: "TBA is a wholesale, institutional market. Retail homeowners borrow from originators — they don't transact in TBA." }
+        ]
+      }
+    ]
+  }
+];
+
+// ---------- Achievements ----------
+const ACHIEVEMENTS = [
+  { id: "first_steps", emoji: "👣", name: "First Steps", desc: "Complete your first unit", check: s => s.completedUnits.length >= 1 },
+  { id: "perfect_unit", emoji: "🎯", name: "Sharpshooter", desc: "Finish a unit with no wrong answers", check: s => s.perfectUnits >= 1 },
+  { id: "streak_3", emoji: "🔥", name: "On Fire", desc: "Maintain a 3-day streak", check: s => s.streak >= 3 },
+  { id: "streak_7", emoji: "📅", name: "Week Warrior", desc: "Maintain a 7-day streak", check: s => s.streak >= 7 },
+  { id: "section_1", emoji: "🧱", name: "Foundations Done", desc: "Complete the Foundations section", check: s => isSectionDone(s, "foundations") },
+  { id: "section_2", emoji: "🏗️", name: "Securitization Pro", desc: "Complete Securitization 101", check: s => isSectionDone(s, "securitization") },
+  { id: "section_3", emoji: "🏛️", name: "Agency Insider", desc: "Complete Agency MBS", check: s => isSectionDone(s, "agency") },
+  { id: "section_4", emoji: "🧩", name: "Tranche Tactician", desc: "Complete CMOs & Tranches", check: s => isSectionDone(s, "cmo") },
+  { id: "section_5", emoji: "📐", name: "Risk Master", desc: "Complete Risk & Valuation", check: s => isSectionDone(s, "risk") },
+  { id: "section_6", emoji: "🏢", name: "Credit Connoisseur", desc: "Complete Non-Agency & CMBS", check: s => isSectionDone(s, "nonagency") },
+  { id: "section_7", emoji: "📈", name: "Market Maven", desc: "Complete Trading & Markets", check: s => isSectionDone(s, "trading") },
+  { id: "all_done", emoji: "🏆", name: "MBS Master", desc: "Complete every section", check: s => COURSE.every(sec => isSectionDone(s, sec.id)) },
+  { id: "xp_500", emoji: "⭐", name: "Rising Star", desc: "Reach 500 XP", check: s => s.xp >= 500 },
+  { id: "xp_1500", emoji: "🌟", name: "Veteran", desc: "Reach 1500 XP", check: s => s.xp >= 1500 },
+  { id: "xp_3000", emoji: "💫", name: "Luminary", desc: "Reach 3000 XP", check: s => s.xp >= 3000 }
+];
+
+// ---------- State ----------
+const STATE_KEY = "mbsduo_state_v1";
+const DEFAULT_STATE = {
+  xp: 0,
+  hearts: 5,
+  maxHearts: 5,
+  lastHeartRefill: Date.now(),
+  streak: 0,
+  lastPlayed: null,    // ISO date string yyyy-mm-dd
+  completedUnits: [],  // unit ids
+  perfectUnits: 0,
+  badges: [],
+  hearts_unlimited_until: 0
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return { ...DEFAULT_STATE };
+    const s = JSON.parse(raw);
+    return { ...DEFAULT_STATE, ...s };
+  } catch (e) {
+    return { ...DEFAULT_STATE };
+  }
+}
+function saveState() {
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+
+// ---------- Helpers ----------
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+function daysBetween(a, b) {
+  if (!a || !b) return Infinity;
+  const da = new Date(a + "T00:00:00");
+  const db = new Date(b + "T00:00:00");
+  return Math.round((db - da) / (1000 * 60 * 60 * 24));
+}
+
+function isSectionDone(s, secId) {
+  const sec = COURSE.find(c => c.id === secId);
+  if (!sec) return false;
+  return sec.units.every(u => s.completedUnits.includes(u.id));
+}
+function isUnitUnlocked(sectionIdx, unitIdx) {
+  if (sectionIdx === 0 && unitIdx === 0) return true;
+  const sec = COURSE[sectionIdx];
+  if (unitIdx > 0) {
+    return state.completedUnits.includes(sec.units[unitIdx - 1].id);
+  }
+  // First unit of a new section: previous section must be complete
+  const prevSec = COURSE[sectionIdx - 1];
+  return prevSec.units.every(u => state.completedUnits.includes(u.id));
+}
+function levelFromXP(xp) {
+  // Levels at 0, 100, 250, 500, 1000, 1800, 3000, 5000, 8000
+  const breaks = [0, 100, 250, 500, 1000, 1800, 3000, 5000, 8000];
+  let lvl = 1;
+  for (let i = 0; i < breaks.length; i++) if (xp >= breaks[i]) lvl = i + 1;
+  return { level: lvl, nextLevel: breaks[lvl] || null, prevLevel: breaks[lvl - 1] || 0 };
+}
+function refreshHeartsIfNeeded() {
+  // Restore 1 heart every 30 minutes, max 5
+  const now = Date.now();
+  const interval = 30 * 60 * 1000;
+  while (state.hearts < state.maxHearts && now - state.lastHeartRefill >= interval) {
+    state.hearts++;
+    state.lastHeartRefill += interval;
+  }
+  if (state.hearts >= state.maxHearts) state.lastHeartRefill = now;
+}
+function maybeUpdateStreak() {
+  const t = todayStr();
+  if (state.lastPlayed === t) return;
+  if (!state.lastPlayed) {
+    state.streak = 0; // not 1 — we'll set 1 when they complete a unit today
+    return;
+  }
+  const diff = daysBetween(state.lastPlayed, t);
+  if (diff === 1) {
+    // streak preserved
+  } else if (diff > 1) {
+    state.streak = 0;
+  }
+}
+
+function checkBadges() {
+  const newly = [];
+  ACHIEVEMENTS.forEach(a => {
+    if (!state.badges.includes(a.id) && a.check(state)) {
+      state.badges.push(a.id);
+      newly.push(a);
+    }
+  });
+  return newly;
+}
+
+function showToast(msg, ms = 1800) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), ms);
+}
+
+function renderStats() {
+  document.getElementById("stat-xp").textContent = state.xp;
+  document.getElementById("stat-streak").textContent = state.streak;
+  const hearts = (state.hearts_unlimited_until > Date.now()) ? "∞" : state.hearts;
+  document.getElementById("stat-hearts").textContent = hearts;
+}
+
+// ---------- View Routing ----------
+let currentTab = "home";
+function go(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+  if (tab === "home") renderHome();
+  else if (tab === "badges") renderBadges();
+  else if (tab === "profile") renderProfile();
+  else if (tab === "about") renderAbout();
+}
+
+// ---------- Home ----------
+function renderHome() {
+  const v = document.getElementById("view");
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  })();
+  let html = `
+    <div class="welcome" style="padding-top:6px;">
+      <h1>${greeting}!</h1>
+      <p class="sub">Tap a section to keep leveling up. ${state.completedUnits.length === 0 ? "Start with Foundations." : ""}</p>
+    </div>
+  `;
+
+  COURSE.forEach((sec, sIdx) => {
+    const completed = sec.units.filter(u => state.completedUnits.includes(u.id)).length;
+    const total = sec.units.length;
+    const pct = Math.round((completed / total) * 100);
+    const sectionUnlocked = (sIdx === 0) || COURSE[sIdx - 1].units.every(u => state.completedUnits.includes(u.id));
+
+    html += `<div class="section-card ${sectionUnlocked ? "" : "locked"}">
+      <div class="section-card-head">
+        <div class="section-title">
+          <span class="section-num">${sIdx + 1}</span>
+          <span>${sec.title}</span>
+        </div>
+        <span style="font-size:13px;color:var(--muted);font-weight:700;">${completed}/${total}</span>
+      </div>
+      <p class="sub" style="margin-bottom:6px;">${sec.blurb}</p>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="unit-grid">
+        ${sec.units.map((u, uIdx) => {
+          const done = state.completedUnits.includes(u.id);
+          const unlocked = sectionUnlocked && isUnitUnlocked(sIdx, uIdx);
+          const isCurrent = unlocked && !done && (uIdx === 0 || state.completedUnits.includes(sec.units[uIdx - 1]?.id));
+          let cls = "unit-node";
+          if (done) cls += " done";
+          else if (!unlocked) cls += " locked";
+          if (isCurrent) cls += " current";
+          return `<button class="${cls}" data-section="${sIdx}" data-unit="${uIdx}" ${unlocked ? "" : "disabled"}>
+            <span class="num">${uIdx + 1}</span>
+            <span class="name">${u.name}</span>
+          </button>`;
+        }).join("")}
+      </div>
+    </div>`;
+  });
+
+  v.innerHTML = html;
+  v.querySelectorAll(".unit-node").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const sIdx = parseInt(btn.dataset.section, 10);
+      const uIdx = parseInt(btn.dataset.unit, 10);
+      startUnit(sIdx, uIdx);
+    });
+  });
+}
+
+// ---------- Lesson ----------
+let lesson = null;
+function startUnit(sIdx, uIdx) {
+  refreshHeartsIfNeeded();
+  if (state.hearts <= 0 && state.hearts_unlimited_until <= Date.now()) {
+    openHeartsModal();
+    return;
+  }
+  const unit = COURSE[sIdx].units[uIdx];
+  // Shuffle questions for variety
+  const qs = unit.questions.map(q => ({ ...q })).sort(() => Math.random() - 0.5);
+  lesson = {
+    sIdx, uIdx,
+    unitId: unit.id,
+    unitName: unit.name,
+    sectionTitle: COURSE[sIdx].title,
+    questions: qs,
+    idx: 0,
+    wrong: 0,
+    correct: 0,
+    answered: false,
+    selected: null,
+    startedAt: Date.now()
+  };
+  renderLesson();
+}
+
+function renderLesson() {
+  const v = document.getElementById("view");
+  const q = lesson.questions[lesson.idx];
+  const totalQs = lesson.questions.length;
+  const progressPct = Math.round(((lesson.idx) / totalQs) * 100);
+  const heartsDisplay = (state.hearts_unlimited_until > Date.now()) ? "∞" : state.hearts;
+
+  v.innerHTML = `
+    <div class="lesson-head">
+      <button class="quit-btn" id="quit-btn" aria-label="Quit lesson">✕</button>
+      <div class="lesson-progress"><div style="width:${progressPct}%"></div></div>
+      <div class="hearts-mini">❤️ ${heartsDisplay}</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;letter-spacing:0.4px;text-transform:uppercase;">${lesson.sectionTitle} · ${lesson.unitName}</div>
+    <div class="question-text">${q.q}</div>
+    <div class="answers" id="answers">
+      ${q.choices.map((c, i) => `
+        <button class="answer" data-i="${i}">
+          <span class="pip">${String.fromCharCode(65 + i)}</span>
+          <span>${c}</span>
+        </button>
+      `).join("")}
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn block" id="check-btn" disabled>Check</button>
+    </div>
+  `;
+
+  document.getElementById("quit-btn").onclick = () => {
+    if (confirm("Quit this lesson? Your progress won't be saved.")) {
+      lesson = null;
+      go("home");
+    }
+  };
+
+  const answers = v.querySelectorAll(".answer");
+  answers.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (lesson.answered) return;
+      answers.forEach(a => a.classList.remove("selected"));
+      btn.classList.add("selected");
+      lesson.selected = parseInt(btn.dataset.i, 10);
+      document.getElementById("check-btn").disabled = false;
+    });
+  });
+
+  document.getElementById("check-btn").onclick = handleCheck;
+}
+
+function handleCheck() {
+  if (lesson.answered) return;
+  if (lesson.selected == null) return;
+  lesson.answered = true;
+  const q = lesson.questions[lesson.idx];
+  const correct = lesson.selected === q.answer;
+  const answersEl = document.querySelectorAll(".answer");
+  answersEl.forEach((a, i) => {
+    a.disabled = true;
+    if (i === q.answer) a.classList.add("correct");
+    else if (i === lesson.selected && !correct) a.classList.add("wrong");
+  });
+  if (correct) lesson.correct++;
+  else {
+    lesson.wrong++;
+    if (state.hearts_unlimited_until <= Date.now()) {
+      state.hearts = Math.max(0, state.hearts - 1);
+      if (state.hearts === state.maxHearts - 1) state.lastHeartRefill = Date.now();
+      saveState();
+      renderStats();
+    }
+  }
+
+  showFeedback(correct, q.explain);
+}
+
+function showFeedback(correct, text) {
+  let fb = document.getElementById("feedback");
+  if (!fb) {
+    fb = document.createElement("div");
+    fb.id = "feedback";
+    fb.className = "feedback";
+    document.body.appendChild(fb);
+  }
+  fb.className = "feedback " + (correct ? "correct" : "wrong");
+  fb.innerHTML = `
+    <h3>${correct ? "Nice — that's right" : "Not quite"}</h3>
+    <div class="explain">${text}</div>
+    <div class="actions">
+      <button class="btn block ${correct ? "success" : "danger"}" id="continue-btn">${lesson.idx + 1 >= lesson.questions.length ? "Finish" : "Continue"}</button>
+    </div>
+  `;
+  document.getElementById("continue-btn").onclick = nextQuestion;
+  // Force reflow before animating
+  requestAnimationFrame(() => fb.classList.add("show"));
+}
+
+function hideFeedback() {
+  const fb = document.getElementById("feedback");
+  if (fb) fb.classList.remove("show");
+}
+
+function nextQuestion() {
+  hideFeedback();
+  // Out of hearts?
+  if (state.hearts <= 0 && state.hearts_unlimited_until <= Date.now()) {
+    setTimeout(() => {
+      lesson = null;
+      openHeartsModal();
+      go("home");
+    }, 300);
+    return;
+  }
+  lesson.idx++;
+  if (lesson.idx >= lesson.questions.length) {
+    finishLesson();
+    return;
+  }
+  lesson.answered = false;
+  lesson.selected = null;
+  renderLesson();
+}
+
+function finishLesson() {
+  const xpEarned = lesson.correct * 10 + (lesson.wrong === 0 ? 15 : 0); // perfect bonus
+  state.xp += xpEarned;
+  const wasNewlyCompleted = !state.completedUnits.includes(lesson.unitId);
+  if (wasNewlyCompleted) state.completedUnits.push(lesson.unitId);
+  if (lesson.wrong === 0) state.perfectUnits++;
+
+  // Streak update on first completion today
+  const t = todayStr();
+  if (state.lastPlayed !== t) {
+    if (state.lastPlayed) {
+      const diff = daysBetween(state.lastPlayed, t);
+      if (diff === 1) state.streak += 1;
+      else if (diff > 1) state.streak = 1;
+      else state.streak = Math.max(1, state.streak);
+    } else {
+      state.streak = 1;
+    }
+    state.lastPlayed = t;
+  }
+
+  const newBadges = checkBadges();
+  saveState();
+  renderStats();
+  renderResult(xpEarned, newBadges);
+}
+
+function renderResult(xpEarned, newBadges) {
+  const v = document.getElementById("view");
+  const accuracy = Math.round((lesson.correct / lesson.questions.length) * 100);
+  const seconds = Math.round((Date.now() - lesson.startedAt) / 1000);
+  const perfect = lesson.wrong === 0;
+  v.innerHTML = `
+    <div class="result-hero">
+      <div class="big">${perfect ? "🏆" : "🎉"}</div>
+      <h2>${perfect ? "Perfect unit!" : "Unit complete"}</h2>
+      <p>${perfect ? "Spotless run — +15 XP bonus" : "Nice work, keep going"}</p>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="label">XP earned</div><div class="value">+${xpEarned}</div></div>
+      <div class="result-stat"><div class="label">Accuracy</div><div class="value">${accuracy}%</div></div>
+      <div class="result-stat"><div class="label">Time</div><div class="value">${seconds}s</div></div>
+    </div>
+    ${newBadges.length ? `
+      <h3 style="margin-top:22px;">New badge${newBadges.length > 1 ? "s" : ""} unlocked!</h3>
+      <div class="badge-grid">
+        ${newBadges.map(b => `
+          <div class="badge"><span class="emoji">${b.emoji}</span><div class="name">${b.name}</div><div class="desc">${b.desc}</div></div>
+        `).join("")}
+      </div>
+    ` : ""}
+    <div style="margin-top:22px; display:grid; gap:10px;">
+      <button class="btn block success" id="continue-home">Continue</button>
+      <button class="btn block secondary" id="another">Another unit</button>
+    </div>
+  `;
+  document.getElementById("continue-home").onclick = () => { lesson = null; go("home"); };
+  document.getElementById("another").onclick = () => {
+    // Find next unit: same section if available, else first unit of next section
+    const sec = COURSE[lesson.sIdx];
+    let nextSIdx = lesson.sIdx, nextUIdx = lesson.uIdx + 1;
+    if (nextUIdx >= sec.units.length) {
+      nextSIdx = lesson.sIdx + 1;
+      nextUIdx = 0;
+    }
+    if (nextSIdx >= COURSE.length) {
+      lesson = null;
+      go("home");
+      showToast("You finished the whole course! 🎓");
+      return;
+    }
+    if (!isUnitUnlocked(nextSIdx, nextUIdx)) {
+      lesson = null;
+      go("home");
+      return;
+    }
+    startUnit(nextSIdx, nextUIdx);
+  };
+}
+
+// ---------- Hearts Modal ----------
+function openHeartsModal() {
+  const m = document.getElementById("modal");
+  const back = document.getElementById("modal-back");
+  refreshHeartsIfNeeded();
+  const minutesToNext = (() => {
+    if (state.hearts >= state.maxHearts) return 0;
+    const interval = 30 * 60 * 1000;
+    const elapsed = Date.now() - state.lastHeartRefill;
+    return Math.max(1, Math.ceil((interval - elapsed) / 60000));
+  })();
+  m.innerHTML = `
+    <div class="emoji-lg">💔</div>
+    <h2>Out of hearts</h2>
+    <p>Your next heart returns in ~${minutesToNext} min. Or get 30 minutes of unlimited hearts to keep going.</p>
+    <div class="actions">
+      <button class="btn block success" id="hearts-unlimited">Unlimited hearts for 30 min</button>
+      <button class="btn block secondary" id="hearts-wait">I'll wait</button>
+    </div>
+  `;
+  document.getElementById("hearts-unlimited").onclick = () => {
+    state.hearts_unlimited_until = Date.now() + 30 * 60 * 1000;
+    state.hearts = state.maxHearts;
+    state.lastHeartRefill = Date.now();
+    saveState();
+    renderStats();
+    closeModal();
+    showToast("Unlimited hearts for 30 minutes ⚡");
+  };
+  document.getElementById("hearts-wait").onclick = closeModal;
+  back.classList.add("show");
+}
+
+function closeModal() {
+  document.getElementById("modal-back").classList.remove("show");
+}
+
+document.getElementById("modal-back").addEventListener("click", (e) => {
+  if (e.target.id === "modal-back") closeModal();
+});
+
+// ---------- Badges screen ----------
+function renderBadges() {
+  const v = document.getElementById("view");
+  const earned = state.badges.length;
+  const total = ACHIEVEMENTS.length;
+  v.innerHTML = `
+    <h1>Achievements</h1>
+    <p class="sub">${earned} / ${total} badges earned</p>
+    <div class="badge-grid">
+      ${ACHIEVEMENTS.map(a => {
+        const got = state.badges.includes(a.id);
+        return `<div class="badge ${got ? "" : "locked"}"><span class="emoji">${a.emoji}</span><div class="name">${a.name}</div><div class="desc">${a.desc}</div></div>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+// ---------- Profile ----------
+function renderProfile() {
+  const v = document.getElementById("view");
+  const { level, nextLevel, prevLevel } = levelFromXP(state.xp);
+  const pct = nextLevel ? Math.round(((state.xp - prevLevel) / (nextLevel - prevLevel)) * 100) : 100;
+  const totalUnits = COURSE.reduce((s, c) => s + c.units.length, 0);
+  const sectionsDone = COURSE.filter(s => isSectionDone(state, s.id)).length;
+
+  v.innerHTML = `
+    <div class="profile-hero">
+      <div class="profile-avatar">M</div>
+      <div class="profile-name">MBS Learner</div>
+      <div class="profile-level">Level ${level} · ${state.xp} XP${nextLevel ? ` · ${nextLevel - state.xp} XP to Level ${level + 1}` : " · max level"}</div>
+      <div class="xp-bar"><div style="width:${pct}%"></div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-tile"><div class="label">Day Streak</div><div class="value">🔥 ${state.streak}</div></div>
+      <div class="stat-tile"><div class="label">Hearts</div><div class="value">❤️ ${(state.hearts_unlimited_until > Date.now()) ? "∞" : state.hearts}/${state.maxHearts}</div></div>
+      <div class="stat-tile"><div class="label">Units Done</div><div class="value">${state.completedUnits.length}/${totalUnits}</div></div>
+      <div class="stat-tile"><div class="label">Sections Done</div><div class="value">${sectionsDone}/${COURSE.length}</div></div>
+      <div class="stat-tile"><div class="label">Perfect Units</div><div class="value">${state.perfectUnits}</div></div>
+      <div class="stat-tile"><div class="label">Badges</div><div class="value">🏅 ${state.badges.length}/${ACHIEVEMENTS.length}</div></div>
+    </div>
+    <div style="display:grid;gap:10px;margin-top:8px;">
+      <button class="btn block secondary" id="practice-btn">Random Practice</button>
+      <button class="btn block ghost" id="reset-btn" style="color:var(--bad);">Reset Progress</button>
+    </div>
+  `;
+
+  document.getElementById("practice-btn").onclick = startRandomPractice;
+  document.getElementById("reset-btn").onclick = () => {
+    if (confirm("This wipes all XP, streaks, completed units, and badges. Are you sure?")) {
+      state = { ...DEFAULT_STATE };
+      saveState();
+      renderStats();
+      go("home");
+    }
+  };
+}
+
+function startRandomPractice() {
+  // Pull 5 random questions from completed sections (or all if none done)
+  const pool = [];
+  COURSE.forEach((sec, sIdx) => {
+    sec.units.forEach((u, uIdx) => {
+      const isAvail = state.completedUnits.includes(u.id) || (sIdx === 0 && uIdx === 0);
+      if (isAvail) u.questions.forEach(q => pool.push({ ...q, _sec: sec.title, _unit: u.name }));
+    });
+  });
+  if (pool.length < 5) {
+    showToast("Complete a few units first to unlock practice");
+    return;
+  }
+  const qs = pool.sort(() => Math.random() - 0.5).slice(0, 5);
+  lesson = {
+    sIdx: -1, uIdx: -1,
+    unitId: "_practice",
+    unitName: "Random Practice",
+    sectionTitle: "Practice",
+    questions: qs,
+    idx: 0, wrong: 0, correct: 0, answered: false, selected: null,
+    startedAt: Date.now(),
+    isPractice: true
+  };
+  renderLesson();
+  // override finish to skip unit-completion bookkeeping
+  const origFinish = finishLesson;
+  finishLesson = function() {
+    const xpEarned = lesson.correct * 5;
+    state.xp += xpEarned;
+    const t = todayStr();
+    if (state.lastPlayed !== t) {
+      if (state.lastPlayed) {
+        const diff = daysBetween(state.lastPlayed, t);
+        if (diff === 1) state.streak += 1;
+        else if (diff > 1) state.streak = 1;
+        else state.streak = Math.max(1, state.streak);
+      } else state.streak = 1;
+      state.lastPlayed = t;
+    }
+    const newBadges = checkBadges();
+    saveState();
+    renderStats();
+    renderResult(xpEarned, newBadges);
+    finishLesson = origFinish;
+  };
+}
+
+// ---------- About ----------
+function renderAbout() {
+  const v = document.getElementById("view");
+  v.innerHTML = `
+    <h1>About MBSduo</h1>
+    <p class="sub">A bite-sized way to learn mortgage-backed securities.</p>
+    <div class="section-card">
+      <h3>How it works</h3>
+      <p style="color:var(--muted);font-size:14px;margin:0;">Work through units in order. Each correct answer earns XP. Mistakes cost a heart (you get 5; one regenerates every 30 minutes). Keep a daily streak going and earn badges along the way.</p>
+    </div>
+    <div class="section-card">
+      <h3>Course content</h3>
+      <p style="color:var(--muted);font-size:14px;margin:0 0 8px;">7 sections, ${COURSE.reduce((s,c)=>s+c.units.length,0)} units, ${COURSE.reduce((s,c)=>s+c.units.reduce((u,x)=>u+x.questions.length,0),0)} questions. Beginner to advanced.</p>
+      <ol style="margin:0;padding-left:20px;color:var(--navy-700);font-size:14px;">
+        ${COURSE.map(s => `<li><strong>${s.title}</strong> — ${s.blurb}</li>`).join("")}
+      </ol>
+    </div>
+    <div class="section-card">
+      <h3>Tips</h3>
+      <ul style="margin:0;padding-left:20px;color:var(--navy-700);font-size:14px;">
+        <li>Read each question carefully — distractors are designed to feel plausible.</li>
+        <li>Aim for perfect units to earn the +15 XP bonus and the Sharpshooter badge.</li>
+        <li>Stuck out of hearts? You can wait 30 minutes per heart, or grab unlimited hearts for 30 minutes.</li>
+        <li>Use Random Practice on the profile tab to keep older units sharp.</li>
+      </ul>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:24px;">MBSduo · single-file build · progress is saved locally on this device</p>
+  `;
+}
+
+// ---------- Init ----------
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => go(t.dataset.tab));
+});
+
+refreshHeartsIfNeeded();
+maybeUpdateStreak();
+saveState();
+renderStats();
+go("home");
+
+// Periodic heart refresh tick
+setInterval(() => {
+  const before = state.hearts;
+  refreshHeartsIfNeeded();
+  if (state.hearts_unlimited_until && Date.now() > state.hearts_unlimited_until && state.hearts_unlimited_until !== 0) {
+    state.hearts_unlimited_until = 0;
+    saveState();
+    renderStats();
+  } else if (state.hearts !== before) {
+    saveState();
+    renderStats();
+  }
+}, 30000);
+</script>
+</body>
+</html>
