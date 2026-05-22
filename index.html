@@ -514,6 +514,49 @@
     .question-text { font-size: 19px; }
   }
 
+  /* Sandbox */
+  .sb-card {
+    background: var(--white);
+    border: 2px solid var(--navy-100);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .sb-card h3 { margin: 0 0 2px; }
+  .sb-card .sub { margin: 0 0 10px; font-size: 13px; }
+  .sb-controls {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .sb-input { display: flex; flex-direction: column; gap: 4px; }
+  .sb-input label {
+    font-size: 12px; font-weight: 800; color: var(--navy-700);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .sb-input label .v { color: var(--navy-600); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .sb-input input[type=range] { accent-color: var(--navy-600); width: 100%; }
+  .sb-input input[type=number] {
+    border: 2px solid var(--navy-100);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 14px;
+    color: var(--navy-800);
+    background: var(--white);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .sb-canvas-wrap { background: var(--navy-50); border-radius: 10px; padding: 10px 8px 6px; }
+  .sb-canvas { display: block; width: 100%; height: auto; }
+  .sb-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--navy-700); font-weight: 700; }
+  .sb-legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+  .sb-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .sb-stats .sb-stat { background: var(--navy-50); border-radius: 8px; padding: 6px 4px; text-align: center; }
+  .sb-stats .sb-stat .l { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sb-stats .sb-stat .v { font-size: 15px; font-weight: 900; color: var(--navy-800); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .sb-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+
   /* No outline on mouse, keep for keyboard */
   :focus { outline: none; }
   :focus-visible { outline: 3px solid var(--navy-400); outline-offset: 2px; }
@@ -537,6 +580,7 @@
 
   <nav class="tabbar" id="tabbar">
     <button class="tab active" data-tab="home"><span class="ico">🏠</span>Learn</button>
+    <button class="tab" data-tab="sandbox"><span class="ico">🧪</span>Sandbox</button>
     <button class="tab" data-tab="badges"><span class="ico">🏅</span>Badges</button>
     <button class="tab" data-tab="profile"><span class="ico">👤</span>Profile</button>
     <button class="tab" data-tab="about"><span class="ico">ℹ️</span>About</button>
@@ -2088,6 +2132,7 @@ function go(tab) {
   currentTab = tab;
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
   if (tab === "home") renderHome();
+  else if (tab === "sandbox") renderSandbox();
   else if (tab === "badges") renderBadges();
   else if (tab === "profile") renderProfile();
   else if (tab === "about") renderAbout();
@@ -2557,6 +2602,429 @@ function renderAbout() {
     </div>
     <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:24px;">MBSduo · single-file build · progress is saved locally on this device</p>
   `;
+}
+
+// ---------- Sandbox ----------
+const SB_COLORS = {
+  a: "#0a2540", b: "#1a4a82", c: "#2563a6", z: "#4a86c4",
+  prin: "#1a4a82", prepay: "#4a86c4", intr: "#8fb4d8",
+  bal: "#0a2540", loss: "#d32f2f",
+  senior: "#1a4a82", mezz: "#2563a6", sub: "#4a86c4"
+};
+
+function sbSetupCanvas(canvas, w, h) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+
+function sbFmtMoney(x) {
+  const abs = Math.abs(x);
+  if (abs >= 1e9) return "$" + (x / 1e9).toFixed(2) + "B";
+  if (abs >= 1e6) return "$" + (x / 1e6).toFixed(1) + "M";
+  if (abs >= 1e3) return "$" + (x / 1e3).toFixed(0) + "K";
+  return "$" + x.toFixed(0);
+}
+
+function sbDrawAxes(ctx, x0, y0, w, h, xMax, yMax, xLabel, yLabel) {
+  ctx.strokeStyle = "#8fb4d8";
+  ctx.fillStyle = "#11355c";
+  ctx.lineWidth = 1;
+  ctx.font = "10px -apple-system, system-ui, sans-serif";
+  // Y gridlines (4 ticks)
+  for (let i = 0; i <= 4; i++) {
+    const y = y0 + h - (i / 4) * h;
+    ctx.beginPath();
+    ctx.moveTo(x0, y);
+    ctx.lineTo(x0 + w, y);
+    ctx.strokeStyle = i === 0 ? "#11355c" : "#d9e6f2";
+    ctx.stroke();
+    const val = (i / 4) * yMax;
+    ctx.fillStyle = "#11355c";
+    ctx.textAlign = "right";
+    ctx.fillText(sbFmtMoney(val), x0 - 4, y + 3);
+  }
+  // X axis ticks
+  ctx.strokeStyle = "#11355c";
+  ctx.beginPath();
+  ctx.moveTo(x0, y0 + h);
+  ctx.lineTo(x0 + w, y0 + h);
+  ctx.stroke();
+  ctx.textAlign = "center";
+  for (let i = 0; i <= 4; i++) {
+    const x = x0 + (i / 4) * w;
+    const v = Math.round((i / 4) * xMax);
+    ctx.fillText(v, x, y0 + h + 12);
+  }
+  ctx.textAlign = "center";
+  ctx.fillText(xLabel, x0 + w / 2, y0 + h + 24);
+}
+
+// Amortize a pool. Returns array of {month, sched, prepay, intr, bal, poolP}
+function sbAmortize(bal, wacPct, wam, cprPct) {
+  const r = wacPct / 1200;
+  const smm = 1 - Math.pow(1 - cprPct / 100, 1 / 12);
+  const out = [];
+  let cur = bal;
+  for (let m = 1; m <= wam && cur > 0.5; m++) {
+    const n = wam - m + 1;
+    const intr = cur * r;
+    let sched;
+    if (r === 0) sched = cur / n;
+    else {
+      const pow = Math.pow(1 + r, n);
+      const pmt = cur * r * pow / (pow - 1);
+      sched = pmt - intr;
+    }
+    sched = Math.min(sched, cur);
+    const prepay = Math.max(0, (cur - sched) * smm);
+    const poolP = sched + prepay;
+    const newBal = Math.max(0, cur - poolP);
+    out.push({ month: m, sched, prepay, intr, bal: newBal, poolP });
+    cur = newBal;
+  }
+  return out;
+}
+
+function sbWAL(monthlyPaid) {
+  // monthly paid array of principal payments. WAL in years.
+  const total = monthlyPaid.reduce((s, x) => s + x, 0);
+  if (total <= 0) return 0;
+  let weighted = 0;
+  monthlyPaid.forEach((p, i) => { weighted += (i + 1) * p; });
+  return (weighted / total) / 12;
+}
+
+function renderSandbox() {
+  const v = document.getElementById("view");
+  v.innerHTML = `
+    <h1>Sandbox</h1>
+    <p class="sub">Interactive mock distributions. Move the sliders — math updates live.</p>
+
+    <div class="sb-card" id="sb-amort">
+      <h3>🏠 Single-pool amortization</h3>
+      <p class="sub">One MBS pool. See scheduled principal, prepayments, and interest each month at a given CPR.</p>
+      <div class="sb-controls">
+        <div class="sb-input"><label>Pool balance <span class="v" id="am-bal-v"></span></label>
+          <input type="range" id="am-bal" min="1" max="500" step="1" value="100"></div>
+        <div class="sb-input"><label>Gross WAC <span class="v" id="am-wac-v"></span></label>
+          <input type="range" id="am-wac" min="2" max="9" step="0.1" value="5.5"></div>
+        <div class="sb-input"><label>WAM (months) <span class="v" id="am-wam-v"></span></label>
+          <input type="range" id="am-wam" min="60" max="360" step="12" value="360"></div>
+        <div class="sb-input"><label>CPR <span class="v" id="am-cpr-v"></span></label>
+          <input type="range" id="am-cpr" min="0" max="40" step="0.5" value="8"></div>
+      </div>
+      <div class="sb-canvas-wrap"><canvas class="sb-canvas" id="am-chart"></canvas></div>
+      <div class="sb-legend">
+        <span><span class="sw" style="background:${SB_COLORS.prin}"></span>Sched principal</span>
+        <span><span class="sw" style="background:${SB_COLORS.prepay}"></span>Prepayments</span>
+        <span><span class="sw" style="background:${SB_COLORS.intr}"></span>Interest</span>
+        <span><span class="sw" style="background:${SB_COLORS.bal};outline:2px solid ${SB_COLORS.bal};outline-offset:-1px;background:transparent"></span>Remaining balance</span>
+      </div>
+      <div class="sb-stats">
+        <div class="sb-stat"><div class="l">Total interest</div><div class="v" id="am-tot-int">—</div></div>
+        <div class="sb-stat"><div class="l">WAL (yrs)</div><div class="v" id="am-wal">—</div></div>
+        <div class="sb-stat"><div class="l">Months to retire</div><div class="v" id="am-retire">—</div></div>
+      </div>
+      <div class="sb-hint">CPR = annual prepayment speed. Higher CPR → balance burns down faster, less total interest.</div>
+    </div>
+
+    <div class="sb-card" id="sb-cmo">
+      <h3>🌊 CMO sequential-pay waterfall</h3>
+      <p class="sub">A → B → C → Z. Z accrues — its would-be coupon becomes principal to the active tranche.</p>
+      <div class="sb-controls">
+        <div class="sb-input"><label>Pool balance <span class="v" id="cm-bal-v"></span></label>
+          <input type="range" id="cm-bal" min="50" max="1000" step="10" value="200"></div>
+        <div class="sb-input"><label>Gross WAC <span class="v" id="cm-wac-v"></span></label>
+          <input type="range" id="cm-wac" min="3" max="8" step="0.1" value="5"></div>
+        <div class="sb-input"><label>WAM <span class="v" id="cm-wam-v"></span></label>
+          <input type="range" id="cm-wam" min="120" max="360" step="12" value="240"></div>
+        <div class="sb-input"><label>CPR <span class="v" id="cm-cpr-v"></span></label>
+          <input type="range" id="cm-cpr" min="0" max="30" step="0.5" value="10"></div>
+        <div class="sb-input"><label>Tranche A % <span class="v" id="cm-a-v"></span></label>
+          <input type="range" id="cm-a" min="10" max="80" step="1" value="50"></div>
+        <div class="sb-input"><label>Tranche B % <span class="v" id="cm-b-v"></span></label>
+          <input type="range" id="cm-b" min="5" max="50" step="1" value="25"></div>
+        <div class="sb-input"><label>Tranche C % <span class="v" id="cm-c-v"></span></label>
+          <input type="range" id="cm-c" min="0" max="40" step="1" value="15"></div>
+        <div class="sb-input"><label>Tranche Z % <span class="v" id="cm-z-v"></span></label>
+          <input type="range" id="cm-z" min="0" max="30" step="1" value="10"></div>
+      </div>
+      <div class="sb-canvas-wrap"><canvas class="sb-canvas" id="cm-chart"></canvas></div>
+      <div class="sb-legend">
+        <span><span class="sw" style="background:${SB_COLORS.a}"></span>A</span>
+        <span><span class="sw" style="background:${SB_COLORS.b}"></span>B</span>
+        <span><span class="sw" style="background:${SB_COLORS.c}"></span>C</span>
+        <span><span class="sw" style="background:${SB_COLORS.z}"></span>Z</span>
+      </div>
+      <div class="sb-stats">
+        <div class="sb-stat"><div class="l">A WAL (yrs)</div><div class="v" id="cm-wal-a">—</div></div>
+        <div class="sb-stat"><div class="l">B WAL</div><div class="v" id="cm-wal-b">—</div></div>
+        <div class="sb-stat"><div class="l">C WAL</div><div class="v" id="cm-wal-c">—</div></div>
+      </div>
+      <div class="sb-hint">Tranche %s are normalized to sum to 100. A gets all principal first, then B, then C. Z accrues until the others retire.</div>
+    </div>
+
+    <div class="sb-card" id="sb-stack">
+      <h3>📉 Capital stack loss waterfall</h3>
+      <p class="sub">Senior/Mezz/Sub. Crank up defaults and severity — watch losses eat the stack from the bottom up.</p>
+      <div class="sb-controls">
+        <div class="sb-input"><label>Pool balance <span class="v" id="cs-bal-v"></span></label>
+          <input type="range" id="cs-bal" min="50" max="1000" step="10" value="200"></div>
+        <div class="sb-input"><label>Cum. default rate <span class="v" id="cs-def-v"></span></label>
+          <input type="range" id="cs-def" min="0" max="25" step="0.25" value="6"></div>
+        <div class="sb-input" style="grid-column:1 / -1;"><label>Loss severity <span class="v" id="cs-sev-v"></span></label>
+          <input type="range" id="cs-sev" min="10" max="90" step="1" value="45"></div>
+      </div>
+      <div class="sb-canvas-wrap"><canvas class="sb-canvas" id="cs-chart"></canvas></div>
+      <div class="sb-legend">
+        <span><span class="sw" style="background:${SB_COLORS.senior}"></span>Senior 7–100%</span>
+        <span><span class="sw" style="background:${SB_COLORS.mezz}"></span>Mezz 3–7%</span>
+        <span><span class="sw" style="background:${SB_COLORS.sub}"></span>Sub 0–3%</span>
+        <span><span class="sw" style="background:${SB_COLORS.loss}"></span>Loss</span>
+      </div>
+      <div class="sb-stats">
+        <div class="sb-stat"><div class="l">Pool loss</div><div class="v" id="cs-loss">—</div></div>
+        <div class="sb-stat"><div class="l">Tranches hit</div><div class="v" id="cs-hit">—</div></div>
+        <div class="sb-stat"><div class="l">Senior intact?</div><div class="v" id="cs-sen">—</div></div>
+      </div>
+      <div class="sb-hint">Losses cascade bottom-up: Sub absorbs first 3% of pool, then Mezz the next 4%, then Senior takes any remainder.</div>
+    </div>
+  `;
+
+  sbBindAmort();
+  sbBindCMO();
+  sbBindStack();
+  sbRunAmort();
+  sbRunCMO();
+  sbRunStack();
+}
+
+function sbBindAmort() {
+  ["am-bal","am-wac","am-wam","am-cpr"].forEach(id => {
+    document.getElementById(id).addEventListener("input", sbRunAmort);
+  });
+}
+function sbRunAmort() {
+  const bal = +document.getElementById("am-bal").value;
+  const wac = +document.getElementById("am-wac").value;
+  const wam = +document.getElementById("am-wam").value;
+  const cpr = +document.getElementById("am-cpr").value;
+  document.getElementById("am-bal-v").textContent = "$" + bal + "M";
+  document.getElementById("am-wac-v").textContent = wac.toFixed(1) + "%";
+  document.getElementById("am-wam-v").textContent = wam + " mo";
+  document.getElementById("am-cpr-v").textContent = cpr.toFixed(1) + "%";
+
+  const sched = sbAmortize(bal * 1e6, wac, wam, cpr);
+  const totalInt = sched.reduce((s, r) => s + r.intr, 0);
+  const wal = sbWAL(sched.map(r => r.sched + r.prepay));
+  document.getElementById("am-tot-int").textContent = sbFmtMoney(totalInt);
+  document.getElementById("am-wal").textContent = wal.toFixed(2);
+  document.getElementById("am-retire").textContent = sched.length;
+
+  const c = document.getElementById("am-chart");
+  const wpx = c.parentElement.clientWidth - 16;
+  const ctx = sbSetupCanvas(c, wpx, 220);
+  ctx.fillStyle = "#eef4fa";
+  ctx.fillRect(0, 0, wpx, 220);
+
+  const x0 = 50, y0 = 8, w = wpx - 60, h = 180;
+  const yMax = Math.max(...sched.map(r => r.sched + r.prepay + r.intr)) * 1.1 || 1;
+  sbDrawAxes(ctx, x0, y0, w, h, sched.length, yMax, "Month", "$");
+
+  const bw = w / sched.length;
+  sched.forEach((r, i) => {
+    const x = x0 + i * bw;
+    let y = y0 + h;
+    // stack: interest bottom, prepay middle, sched top
+    const hI = (r.intr / yMax) * h;
+    const hP = (r.prepay / yMax) * h;
+    const hS = (r.sched / yMax) * h;
+    ctx.fillStyle = SB_COLORS.intr; ctx.fillRect(x, y - hI, bw + 0.5, hI); y -= hI;
+    ctx.fillStyle = SB_COLORS.prepay; ctx.fillRect(x, y - hP, bw + 0.5, hP); y -= hP;
+    ctx.fillStyle = SB_COLORS.prin; ctx.fillRect(x, y - hS, bw + 0.5, hS);
+  });
+
+  // Remaining balance overlay (right-side scale)
+  ctx.strokeStyle = SB_COLORS.bal;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const balMax = bal * 1e6;
+  sched.forEach((r, i) => {
+    const x = x0 + (i + 0.5) * bw;
+    const y = y0 + h - (r.bal / balMax) * h;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function sbBindCMO() {
+  ["cm-bal","cm-wac","cm-wam","cm-cpr","cm-a","cm-b","cm-c","cm-z"].forEach(id => {
+    document.getElementById(id).addEventListener("input", sbRunCMO);
+  });
+}
+function sbRunCMO() {
+  const bal = +document.getElementById("cm-bal").value;
+  const wac = +document.getElementById("cm-wac").value;
+  const wam = +document.getElementById("cm-wam").value;
+  const cpr = +document.getElementById("cm-cpr").value;
+  let a = +document.getElementById("cm-a").value;
+  let b = +document.getElementById("cm-b").value;
+  let cc = +document.getElementById("cm-c").value;
+  let z = +document.getElementById("cm-z").value;
+  const sum = a + b + cc + z;
+  if (sum === 0) { a = 1; }
+  const na = a / sum, nb = b / sum, nc = cc / sum, nz = z / sum;
+
+  document.getElementById("cm-bal-v").textContent = "$" + bal + "M";
+  document.getElementById("cm-wac-v").textContent = wac.toFixed(1) + "%";
+  document.getElementById("cm-wam-v").textContent = wam + " mo";
+  document.getElementById("cm-cpr-v").textContent = cpr.toFixed(1) + "%";
+  document.getElementById("cm-a-v").textContent = (na * 100).toFixed(0) + "%";
+  document.getElementById("cm-b-v").textContent = (nb * 100).toFixed(0) + "%";
+  document.getElementById("cm-c-v").textContent = (nc * 100).toFixed(0) + "%";
+  document.getElementById("cm-z-v").textContent = (nz * 100).toFixed(0) + "%";
+
+  const pool = bal * 1e6;
+  const sched = sbAmortize(pool, wac, wam, cpr);
+  const r = wac / 1200;
+  let bA = pool * na, bB = pool * nb, bC = pool * nc, bZ = pool * nz;
+
+  const paidA = [], paidB = [], paidC = [], paidZ = [];
+  for (const row of sched) {
+    let avail = row.poolP;
+    // Z accrual: its coupon is added to its balance AND redirected as principal
+    const zAccr = bZ * r;
+    bZ += zAccr;
+    avail += zAccr;
+    // Pay A first
+    let pa = Math.min(bA, avail); bA -= pa; avail -= pa;
+    let pb = Math.min(bB, avail); bB -= pb; avail -= pb;
+    let pc = Math.min(bC, avail); bC -= pc; avail -= pc;
+    let pz = Math.min(bZ, avail); bZ -= pz; avail -= pz;
+    paidA.push(pa); paidB.push(pb); paidC.push(pc); paidZ.push(pz);
+    if (bA + bB + bC + bZ < 1) break;
+  }
+
+  document.getElementById("cm-wal-a").textContent = sbWAL(paidA).toFixed(2);
+  document.getElementById("cm-wal-b").textContent = sbWAL(paidB).toFixed(2);
+  document.getElementById("cm-wal-c").textContent = sbWAL(paidC).toFixed(2);
+
+  const c = document.getElementById("cm-chart");
+  const wpx = c.parentElement.clientWidth - 16;
+  const ctx = sbSetupCanvas(c, wpx, 240);
+  ctx.fillStyle = "#eef4fa";
+  ctx.fillRect(0, 0, wpx, 240);
+
+  const x0 = 60, y0 = 8, w = wpx - 70, h = 200;
+  const months = paidA.length;
+  const yMax = Math.max(...paidA.map((_, i) => paidA[i] + paidB[i] + paidC[i] + paidZ[i])) * 1.1 || 1;
+  sbDrawAxes(ctx, x0, y0, w, h, months, yMax, "Month", "$");
+
+  const bw = w / months;
+  for (let i = 0; i < months; i++) {
+    const x = x0 + i * bw;
+    let y = y0 + h;
+    const segs = [
+      { v: paidA[i], color: SB_COLORS.a },
+      { v: paidB[i], color: SB_COLORS.b },
+      { v: paidC[i], color: SB_COLORS.c },
+      { v: paidZ[i], color: SB_COLORS.z }
+    ];
+    for (const s of segs) {
+      const sh = (s.v / yMax) * h;
+      ctx.fillStyle = s.color;
+      ctx.fillRect(x, y - sh, bw + 0.5, sh);
+      y -= sh;
+    }
+  }
+}
+
+function sbBindStack() {
+  ["cs-bal","cs-def","cs-sev"].forEach(id => {
+    document.getElementById(id).addEventListener("input", sbRunStack);
+  });
+}
+function sbRunStack() {
+  const bal = +document.getElementById("cs-bal").value;
+  const def = +document.getElementById("cs-def").value;
+  const sev = +document.getElementById("cs-sev").value;
+  document.getElementById("cs-bal-v").textContent = "$" + bal + "M";
+  document.getElementById("cs-def-v").textContent = def.toFixed(2) + "%";
+  document.getElementById("cs-sev-v").textContent = sev + "%";
+
+  const pool = bal * 1e6;
+  const tranches = [
+    { name: "Sub",    sizePct: 3,  color: SB_COLORS.sub },
+    { name: "Mezz",   sizePct: 4,  color: SB_COLORS.mezz },
+    { name: "Senior", sizePct: 93, color: SB_COLORS.senior }
+  ];
+  tranches.forEach(t => { t.size = pool * t.sizePct / 100; });
+  let loss = pool * (def / 100) * (sev / 100);
+  let totalLoss = loss;
+  let hit = 0;
+  for (const t of tranches) {
+    const take = Math.min(loss, t.size);
+    t.loss = take;
+    t.surv = t.size - take;
+    loss -= take;
+    if (t.loss > 0) hit++;
+  }
+  const sen = tranches[2];
+  document.getElementById("cs-loss").textContent = sbFmtMoney(totalLoss);
+  document.getElementById("cs-hit").textContent = hit + "/3";
+  document.getElementById("cs-sen").textContent = sen.loss > 0 ? "❌ hit" : "✅ yes";
+
+  const c = document.getElementById("cs-chart");
+  const wpx = c.parentElement.clientWidth - 16;
+  const ctx = sbSetupCanvas(c, wpx, 260);
+  ctx.fillStyle = "#eef4fa";
+  ctx.fillRect(0, 0, wpx, 260);
+
+  // Vertical stack: Senior on top, Mezz middle, Sub bottom
+  const barX = 20, barW = wpx - 200;
+  const top = 14, bot = 246;
+  const totalH = bot - top;
+  const order = [tranches[2], tranches[1], tranches[0]]; // Senior, Mezz, Sub
+  let cursor = top;
+  ctx.font = "12px -apple-system, system-ui, sans-serif";
+  ctx.textBaseline = "middle";
+  for (const t of order) {
+    const trH = (t.size / pool) * totalH;
+    // surviving portion (tranche color)
+    const survH = (t.surv / t.size) * trH;
+    const lossH = trH - survH;
+    // For Sub & Mezz losses are at the bottom of their tranche; for Senior at the top of the loss cascade.
+    // Visually: draw loss in red at the bottom edge of the tranche (where the wipeout happens from below).
+    ctx.fillStyle = t.color;
+    ctx.fillRect(barX, cursor, barW, survH);
+    ctx.fillStyle = SB_COLORS.loss;
+    ctx.fillRect(barX, cursor + survH, barW, lossH);
+    // Outline
+    ctx.strokeStyle = "#0a2540";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, cursor, barW, trH);
+    // Label to the right
+    ctx.fillStyle = "#0a2540";
+    ctx.textAlign = "left";
+    const midY = cursor + trH / 2;
+    ctx.font = "bold 13px -apple-system, system-ui, sans-serif";
+    ctx.fillText(t.name, barX + barW + 10, midY - 8);
+    ctx.font = "11px -apple-system, system-ui, sans-serif";
+    ctx.fillStyle = "#11355c";
+    ctx.fillText(sbFmtMoney(t.size) + " · loss " + sbFmtMoney(t.loss), barX + barW + 10, midY + 6);
+    if (t.loss > 0) {
+      const lossPct = (t.loss / t.size) * 100;
+      ctx.fillStyle = SB_COLORS.loss;
+      ctx.fillText("(" + lossPct.toFixed(0) + "% wiped)", barX + barW + 10, midY + 18);
+    }
+    cursor += trH;
+  }
 }
 
 // ---------- Init ----------
