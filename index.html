@@ -556,6 +556,36 @@
   .sb-stats .sb-stat .l { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
   .sb-stats .sb-stat .v { font-size: 15px; font-weight: 900; color: var(--navy-800); font-variant-numeric: tabular-nums; margin-top: 2px; }
   .sb-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+  /* Distribution waterfall table */
+  .sb-waterfall {
+    width: 100%; border-collapse: collapse; margin-top: 10px;
+    font-size: 12px; font-variant-numeric: tabular-nums;
+  }
+  .sb-waterfall th, .sb-waterfall td {
+    padding: 7px 8px; text-align: right;
+    border-bottom: 1px solid var(--navy-100);
+  }
+  .sb-waterfall th {
+    background: var(--navy-800); color: white;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    font-weight: 800;
+  }
+  .sb-waterfall th:first-child, .sb-waterfall td:first-child { text-align: left; }
+  .sb-waterfall .fee-row td  { color: var(--navy-700); }
+  .sb-waterfall .int-row td  { color: var(--navy-800); font-weight: 700; }
+  .sb-waterfall .prin-row td { color: var(--navy-600); font-weight: 700; }
+  .sb-waterfall .locked-row td { color: var(--muted); font-style: italic; }
+  .sb-waterfall .locked-row td:nth-child(3)::after { content: " 🔒"; }
+  .sb-waterfall .shortfall { color: var(--bad); font-weight: 800; }
+  .sb-waterfall tfoot td { font-weight: 800; background: var(--navy-50); color: var(--good); }
+  .sb-waterfall tfoot td:first-child { color: var(--navy-800); }
+  .sb-toggle {
+    display: flex; gap: 8px; align-items: center; padding: 8px 12px;
+    background: var(--navy-50); border-radius: 8px;
+    font-size: 12px; font-weight: 700; color: var(--navy-700);
+    cursor: pointer; user-select: none;
+  }
+  .sb-toggle input { margin: 0; accent-color: var(--navy-600); width: 16px; height: 16px; }
 
   /* ========== Game polish ========== */
   /* Mascot — Mortie the Mortgage House */
@@ -1252,7 +1282,289 @@ const COURSE = [
     ]
   },
 
-  // 3. AGENCY MBS
+  // 3. CORPORATE TRUST & CASH ADMIN
+  {
+    id: "trustadmin",
+    title: "Corporate Trust & Cash Admin",
+    blurb: "The trustee/SA side: roles, accounts, waterfalls, advances, reporting.",
+    units: [
+      {
+        id: "ta1", name: "Who's Who in the Trust",
+        questions: [
+          { q: "The indenture trustee's primary duty is to:", choices: [
+            "Originate the mortgages in the pool",
+            "Hold legal title to trust assets and act for the certificateholders",
+            "Service the loans directly with borrowers",
+            "Market the bonds to investors"
+          ], answer: 1, explain: "The trustee holds legal title in trust for the certificateholders and enforces remedies on their behalf. Origination, servicing, and marketing are separate roles handled by other parties." },
+
+          { q: "The Securities Administrator (SA) is responsible for:", choices: [
+            "Calculating monthly distributions and producing the statement to certificateholders",
+            "Foreclosing on defaulted loans",
+            "Setting the pool's WAC at closing",
+            "Approving borrower loan modifications"
+          ], answer: 0, explain: "The SA — often the trustee or its affiliate — runs the waterfall math each Distribution Date, produces the monthly statement, and remits to DTC. Workout and servicing decisions sit with the master/special servicer." },
+
+          { q: "Which is typically NOT a master servicer responsibility?", choices: [
+            "Collecting P&I from borrowers (directly or via subservicers)",
+            "Making P&I advances on delinquent loans",
+            "Physical custody of the original mortgage notes",
+            "Remitting monthly collections to the trustee"
+          ], answer: 2, explain: "Custody of the original wet-ink note + recorded mortgage + assignments lives with the Custodian, often a separate institution from both the master servicer and the trustee." },
+
+          { q: "A Calculation Agent is needed primarily when:", choices: [
+            "Bonds pay a floating rate that resets each period",
+            "All bonds are fixed-rate",
+            "The deal has no prepayments",
+            "The trustee is also the depositor"
+          ], answer: 0, explain: "Floating-rate bonds reference an index (SOFR, Prime, etc.). The Calculation Agent fixes the new rate at each reset date and notifies the paying agent so distributions can be computed." },
+
+          { q: "A Custodian on an MBS deal holds:", choices: [
+            "Original promissory notes, recorded mortgages/assignments, and required title docs",
+            "The cash in the distribution account",
+            "Marketing materials for the bonds",
+            "Investor tax records"
+          ], answer: 0, explain: "Custodian holds the 'collateral file' for every loan — original wet-ink note, recorded mortgage, intervening assignments, title policy, and other docs the PSA requires. Cash sits with the trustee/paying agent." }
+        ]
+      },
+      {
+        id: "ta2", name: "Trust Accounts & Eligible Investments",
+        questions: [
+          { q: "The Collection Account is where:", choices: [
+            "Investor distributions are paid out to DTC",
+            "The servicer deposits borrower P&I before remitting to the trust",
+            "Tax and insurance escrows are held",
+            "The reserve fund lives"
+          ], answer: 1, explain: "The Collection Account is the servicer-controlled holding bucket for borrower payments and recoveries during the period. The servicer then remits to the trust's Distribution Account on the Remittance Date." },
+
+          { q: "Trust cash held between collection and distribution must be invested only in:", choices: [
+            "Equities chosen by the trustee",
+            "Eligible Investments — short-dated, principal-stable instruments defined in the PSA",
+            "Long-duration corporate bonds for yield",
+            "Whatever the master servicer prefers"
+          ], answer: 1, explain: "PSAs define Eligible Investments narrowly: Treasuries, agency paper, top-rated commercial paper with short maturity caps, eligible money market funds. The goal is liquidity and capital preservation, not yield." },
+
+          { q: "A Reserve Account is funded to:", choices: [
+            "Pay rating agency surveillance fees",
+            "Provide credit support — absorb shortfalls before they hit bondholders",
+            "Park excess origination fees for the depositor",
+            "Cover trustee performance bonuses"
+          ], answer: 1, explain: "The reserve fund is credit enhancement. Cash trapped there plugs interest shortfalls or absorbs losses before subordinate bondholders take any hit." },
+
+          { q: "Trust custodial accounts holding investor funds must be:", choices: [
+            "Held in the trustee's general operating account for efficiency",
+            "Segregated, bankruptcy-remote, and invested only in Eligible Investments",
+            "Held by the servicer's parent company",
+            "Disbursed daily to avoid balances"
+          ], answer: 1, explain: "PSA requires segregation. Trust cash is bankruptcy-remote from the servicer's general assets — if the servicer fails, the investors' money is protected because it never commingled." },
+
+          { q: "The Tax & Insurance (T&I) Escrow Account is:", choices: [
+            "Owned by the borrower but administered by the servicer",
+            "Property of the trust, part of Available Funds",
+            "An investment vehicle for excess spread",
+            "Reported on the deal's monthly statement as a trust asset"
+          ], answer: 0, explain: "T&I escrows belong to the borrower; the servicer holds and disburses them on the borrower's behalf. They're tracked separately and never flow through the trust waterfall." }
+        ]
+      },
+      {
+        id: "ta3", name: "The Payment Cycle: Cutoff → Distribution",
+        questions: [
+          { q: "The Determination Date is when:", choices: [
+            "The servicer's collection records for the period are frozen so the SA can compute the distribution",
+            "Loans are determined to be in default",
+            "The trustee determines its own fee",
+            "Bondholders determine the coupon"
+          ], answer: 0, explain: "Determination Date is the cutoff for that period's servicing data. The SA uses the frozen data set to calculate the distribution amounts before the Distribution Date." },
+
+          { q: "Record Date for an MBS distribution refers to:", choices: [
+            "The date the mortgage was recorded with the county",
+            "The date used to identify who is entitled to receive that month's distribution",
+            "The depositor's incorporation date",
+            "The original deal closing date"
+          ], answer: 1, explain: "Holders of record as of the Record Date receive the distribution on the Distribution Date. For most agency MBS this is the last business day of the prior month." },
+
+          { q: "The standard Distribution Date for Fannie Mae MBS is:", choices: [
+            "The 25th of each month",
+            "The 5th of each month",
+            "The last business day of the month",
+            "The first Monday of the quarter"
+          ], answer: 0, explain: "Fannie/Freddie pay on the 25th, Ginnie on the 20th. Non-agency CMBS typically pay around the 4th. The exact day is pinned in the PSA/trust agreement." },
+
+          { q: "The Cutoff Date for a securitization is:", choices: [
+            "The date a loan can no longer be added to the pool — purely an underwriting deadline",
+            "The boundary date from which all P&I belongs to the trust rather than the seller",
+            "The trustee's resignation deadline",
+            "The date bondholders stop trading the deal"
+          ], answer: 1, explain: "From the Cutoff Date forward, every dollar of P&I on the pool legally belongs to the trust. Interest accrued before the Cutoff Date is the depositor's." },
+
+          { q: "Servicers typically remit collections to the trustee:", choices: [
+            "Real-time as borrower checks clear",
+            "Once a month, by the Remittance Date specified in the PSA",
+            "Quarterly",
+            "Only after a default"
+          ], answer: 1, explain: "Servicers aggregate the period's collections (P&I, prepays, recoveries) and remit on a fixed monthly Remittance Date — usually a few business days after the Determination Date." }
+        ]
+      },
+      {
+        id: "ta4", name: "The Distribution Waterfall",
+        questions: [
+          { q: "In a typical waterfall, the FIRST application of Available Funds is:", choices: [
+            "Senior bond interest",
+            "Trustee, master servicing, and other senior fees",
+            "Subordinate principal",
+            "Reserve fund replenishment"
+          ], answer: 1, explain: "Fees come off the top. Trustee fee, master servicing fee, custodian fee, and any other senior administrative expenses are paid before any bondholder distribution." },
+
+          { q: "Within the bondholder portion, classic senior/sub priority is:", choices: [
+            "Sub interest → senior interest → sub principal → senior principal",
+            "Senior interest → senior principal → sub interest → sub principal",
+            "Senior principal first, then all interest pro-rata",
+            "Pro-rata across all tranches always"
+          ], answer: 1, explain: "Standard shifting-interest senior/sub: senior interest, senior principal, sub interest, sub principal. Some deals flip to pro-rata after stepdown if performance triggers pass." },
+
+          { q: "If a delinquency trigger fails, the typical waterfall effect is:", choices: [
+            "All distributions stop entirely",
+            "Principal that would have gone to subordinates is locked out and stays with seniors",
+            "The bonds are immediately redeemed at par",
+            "The servicing fee doubles"
+          ], answer: 1, explain: "Trigger failure flips the deal from pro-rata back to fully sequential — principal stays with the senior class until the trigger heals. This is the structure's main defense against deteriorating collateral." },
+
+          { q: "Excess spread in a typical non-agency deal:", choices: [
+            "Is paid to bondholders pro-rata before anything else",
+            "Is trapped to build OC or absorb losses, then released to the residual",
+            "Goes to the servicer as a performance bonus",
+            "Reduces the senior coupon automatically"
+          ], answer: 1, explain: "Excess spread (interest income minus all senior expenses and bond coupons) gets trapped to build overcollateralization or cover losses; only after the OC target is met does it flow to the residual / equity holder." },
+
+          { q: "Available Funds for a Distribution Date generally include:", choices: [
+            "Only scheduled principal received that month",
+            "Scheduled P&I, prepayments, recoveries, servicer advances, and earnings on Eligible Investments",
+            "Just borrower checks received the day of distribution",
+            "The trustee's operating cash"
+          ], answer: 1, explain: "Available Funds is the full bucket: collections (scheduled + unscheduled), liquidation/REO net proceeds, servicer advances credited to the trust, plus interest earned on the trust's own cash sitting in Eligible Investments." }
+        ]
+      },
+      {
+        id: "ta5", name: "Advances, Recoveries & Compensating Interest",
+        questions: [
+          { q: "A P&I Advance is:", choices: [
+            "The servicer advancing its own fee in advance",
+            "The servicer fronting delinquent borrower P&I to keep certificate cashflow on schedule",
+            "An early principal paydown by the trust",
+            "Excess interest paid to subordinates"
+          ], answer: 1, explain: "The master servicer advances scheduled P&I on delinquent loans so the trust pays bondholders on time, as long as the advance is deemed recoverable from future collections or liquidation proceeds." },
+
+          { q: "A 'Non-Recoverable' determination means:", choices: [
+            "The borrower is ineligible for a workout",
+            "The servicer has determined further advances on a loan won't be recovered from anticipated liquidation proceeds, so it stops advancing",
+            "The trustee has resigned",
+            "The deal has fully amortized"
+          ], answer: 1, explain: "Once the servicer files a non-recoverable determination, it stops advancing P&I and servicing advances on that loan. Prior advances are then recovered off the top of liquidation proceeds before anything else." },
+
+          { q: "Servicing Advances cover:", choices: [
+            "The borrower's monthly P&I",
+            "Property-protection costs: taxes, force-placed insurance, REO carrying costs, foreclosure legal expenses",
+            "Bondholder distributions",
+            "The servicer's payroll"
+          ], answer: 1, explain: "Servicing advances are about keeping the collateral whole — pay the property taxes so the lien stays first-priority, force-place insurance if the borrower lapses, maintain the REO. Separate bucket from P&I advances." },
+
+          { q: "When liquidation proceeds finally arrive on a defaulted loan, the typical recovery order is:", choices: [
+            "Bondholders first, then advances",
+            "Servicing advances and P&I advances reimbursed off the top, then net proceeds flow into Available Funds",
+            "Servicer fee, then trustee, then advances",
+            "Pro-rata across everyone"
+          ], answer: 1, explain: "Advance reimbursement comes first — the servicer can't be expected to keep advancing if it isn't made whole. Net proceeds after advances + costs then become part of Available Funds for the next distribution." },
+
+          { q: "Compensating Interest is paid by:", choices: [
+            "The borrower at closing as a one-time fee",
+            "The servicer, capped at its servicing fee, to plug the interest shortfall from intra-month prepayments",
+            "The trustee, to settle bondholder disputes",
+            "The rating agencies, to compensate for downgrades"
+          ], answer: 1, explain: "When a borrower prepays mid-month, the trust gets less than a full month of interest on that balance. The servicer pays 'compensating interest' (capped at its servicing fee) to plug some of that shortfall — protecting the bondholder coupon." }
+        ]
+      },
+      {
+        id: "ta6", name: "Investor Reporting & REMIC Compliance",
+        questions: [
+          { q: "The monthly Distribution Date Statement is produced by:", choices: [
+            "The borrower",
+            "The trustee or Securities Administrator",
+            "The rating agency",
+            "The depositor"
+          ], answer: 1, explain: "The SA (often the trustee or its affiliate) generates the monthly statement showing principal, interest, fees, balances, factors, and performance data — exactly as the PSA dictates." },
+
+          { q: "SEC Form 10-D is:", choices: [
+            "The annual financial statement of the depositor",
+            "The monthly distribution report filed under Reg AB for SEC-registered ABS deals",
+            "The deal's original offering prospectus",
+            "A trustee resignation notice"
+          ], answer: 1, explain: "Form 10-D, filed within 15 days of each Distribution Date, is the public/SEC version of the monthly distribution statement. Reg AB-registered deals require it; many private (144A) deals don't." },
+
+          { q: "The CREFC Investor Reporting Package (IRP) is used for:", choices: [
+            "Agency residential MBS",
+            "CMBS — standardized monthly loan-level, property-level, and bond-level reporting",
+            "Reverse mortgages",
+            "Whole-loan trades"
+          ], answer: 1, explain: "CREFC IRP is the CMBS industry standard. Master servicer, special servicer, and trustee/SA each populate their assigned files — loan setup, property financials, delinquency, bond-level, watchlist, etc." },
+
+          { q: "Form 1099-INT for an MBS investor reports:", choices: [
+            "Original issue discount only",
+            "Interest income paid during the calendar year",
+            "Sale proceeds only",
+            "Tax-exempt income only"
+          ], answer: 1, explain: "1099-INT covers ordinary interest. OID goes on 1099-OID; sale proceeds (if any flow through the SA) go on 1099-B. Many MBS investors receive multiple forms depending on the bond's tax profile." },
+
+          { q: "A REMIC election:", choices: [
+            "Imposes corporate income tax on the trust",
+            "Creates a flow-through structure — the trust isn't taxed, income flows to holders",
+            "Eliminates all reporting requirements",
+            "Only applies to commercial mortgages"
+          ], answer: 1, explain: "REMIC (Real Estate Mortgage Investment Conduit) is the standard pass-through tax election for MBS. The trust pays no entity-level tax; holders pay on their share. Strict rules limit prohibited transactions and post-startup contributions — break them and you blow the REMIC." }
+        ]
+      },
+      {
+        id: "ta7", name: "Triggers, Tests & Edge Cases",
+        questions: [
+          { q: "A Stepdown Date is:", choices: [
+            "When subordinate bonds can start receiving principal pro-rata with seniors (if triggers pass)",
+            "When the servicing fee steps down",
+            "When the trustee takes vacation",
+            "When the deal automatically calls itself"
+          ], answer: 0, explain: "Stepdown (typically year 3-5 plus credit/delinquency tests) shifts principal allocation from sequential (all to seniors) to pro-rata across senior and sub — but only if the performance triggers pass." },
+
+          { q: "A typical Delinquency Trigger tests:", choices: [
+            "The trustee's response time",
+            "60+ day delinquencies as a % of current pool balance against a step-curve threshold",
+            "The number of bondholders",
+            "Servicer satisfaction surveys"
+          ], answer: 1, explain: "Most deals test rolling-3-month average 60+ DLQ against a step-curve threshold defined in the PSA. A breach traps principal with the seniors until the test heals on a subsequent date." },
+
+          { q: "An Overcollateralization (OC) Test checks whether:", choices: [
+            "The trust has too much cash on hand",
+            "Pool balance exceeds bond balance by the required target percentage",
+            "Insurance is in place on every property",
+            "The trustee has posted its surety bond"
+          ], answer: 1, explain: "OC = pool balance minus bond balance. Falling below the target diverts excess spread to build OC back up rather than releasing it to the residual. Many deals also have an OC floor (a hard $ minimum)." },
+
+          { q: "A Clean-up Call provision lets:", choices: [
+            "Borrowers refinance freely with no penalty",
+            "The depositor, sponsor, or servicer redeem all remaining bonds when pool balance falls below a threshold (often 10% of original)",
+            "The trustee shut the trust down at will",
+            "Bondholders force a sale at any time"
+          ], answer: 1, explain: "When the pool burns down to ~10% of original, servicing economics get inefficient. The clean-up call holder can buy out remaining bonds at par (plus accrued) and collapse the trust." },
+
+          { q: "If the trustee detects a servicer Event of Default (e.g., failure to remit collections), the typical first step is:", choices: [
+            "Immediately sue the servicer for breach",
+            "Issue a notice of default, allow the cure period per the PSA, and if uncured, terminate the servicer with required bondholder consent",
+            "Liquidate the trust to protect investors",
+            "Notify the borrower directly"
+          ], answer: 1, explain: "PSAs detail the cure period (often 30+ days) and consent requirements (typically a majority or supermajority of voting holders) before termination. The trustee follows the document — administrator, not vigilante." }
+        ]
+      }
+    ]
+  },
+
+  // 4. AGENCY MBS
   {
     id: "agency",
     title: "Agency MBS",
@@ -2263,6 +2575,7 @@ const ACHIEVEMENTS = [
   { id: "streak_7", emoji: "📅", name: "Week Warrior", desc: "Maintain a 7-day streak", check: s => s.streak >= 7 },
   { id: "section_1", emoji: "🧱", name: "Foundations Done", desc: "Complete the Foundations section", check: s => isSectionDone(s, "foundations") },
   { id: "section_2", emoji: "🏗️", name: "Securitization Pro", desc: "Complete Securitization 101", check: s => isSectionDone(s, "securitization") },
+  { id: "section_trust", emoji: "🏦", name: "Trust Admin", desc: "Complete Corporate Trust & Cash Admin", check: s => isSectionDone(s, "trustadmin") },
   { id: "section_3", emoji: "🏛️", name: "Agency Insider", desc: "Complete Agency MBS", check: s => isSectionDone(s, "agency") },
   { id: "section_4", emoji: "🧩", name: "Tranche Tactician", desc: "Complete CMOs & Tranches", check: s => isSectionDone(s, "cmo") },
   { id: "section_5", emoji: "📐", name: "Risk Master", desc: "Complete Risk & Valuation", check: s => isSectionDone(s, "risk") },
@@ -3316,14 +3629,54 @@ function renderSandbox() {
       </div>
       <div class="sb-hint">Losses cascade bottom-up: Sub absorbs first 3% of pool, then Mezz the next 4%, then Senior takes any remainder.</div>
     </div>
+
+    <div class="sb-card" id="sb-distrib">
+      <h3>💧 Distribution Date waterfall <span style="font-size:11px;font-weight:700;color:var(--gold);background:rgba(247,201,92,0.15);padding:2px 8px;border-radius:6px;vertical-align:middle;margin-left:4px;">TRUST ADMIN</span></h3>
+      <p class="sub">What the SA actually computes on Distribution Date. Apply Available Funds line-by-line.</p>
+      <div class="sb-controls">
+        <div class="sb-input" style="grid-column:1 / -1;"><label>Available Funds <span class="v" id="wf-af-v"></span></label>
+          <input type="range" id="wf-af" min="200000" max="6000000" step="50000" value="1500000"></div>
+        <div class="sb-input"><label>Pool balance <span class="v" id="wf-pool-v"></span></label>
+          <input type="range" id="wf-pool" min="50" max="1000" step="10" value="200"></div>
+        <div class="sb-input"><label>Trustee fee (bps/yr) <span class="v" id="wf-tr-v"></span></label>
+          <input type="range" id="wf-tr" min="0" max="10" step="0.25" value="1"></div>
+        <div class="sb-input"><label>Master svc fee (bps/yr) <span class="v" id="wf-msf-v"></span></label>
+          <input type="range" id="wf-msf" min="10" max="50" step="1" value="25"></div>
+        <div class="sb-input"><label>Custodian fee (bps/yr) <span class="v" id="wf-cu-v"></span></label>
+          <input type="range" id="wf-cu" min="0" max="5" step="0.25" value="0.5"></div>
+        <div class="sb-input"><label>Class A balance <span class="v" id="wf-a-v"></span></label>
+          <input type="range" id="wf-a" min="10" max="800" step="5" value="150"></div>
+        <div class="sb-input"><label>Class A coupon <span class="v" id="wf-ac-v"></span></label>
+          <input type="range" id="wf-ac" min="2" max="8" step="0.1" value="5"></div>
+        <div class="sb-input"><label>Class B balance <span class="v" id="wf-b-v"></span></label>
+          <input type="range" id="wf-b" min="0" max="300" step="5" value="40"></div>
+        <div class="sb-input"><label>Class B coupon <span class="v" id="wf-bc-v"></span></label>
+          <input type="range" id="wf-bc" min="3" max="10" step="0.1" value="6.5"></div>
+        <label class="sb-toggle" style="grid-column:1 / -1;">
+          <input type="checkbox" id="wf-trig" checked> Performance triggers passing — sub principal allowed
+        </label>
+      </div>
+      <table class="sb-waterfall" id="wf-table">
+        <thead>
+          <tr><th>Step</th><th>Accrued / target</th><th>Paid</th><th>Funds left</th></tr>
+        </thead>
+        <tbody id="wf-rows"></tbody>
+        <tfoot>
+          <tr><td>To residual / excess spread →</td><td></td><td id="wf-residual">—</td><td></td></tr>
+        </tfoot>
+      </table>
+      <div class="sb-hint">Order: Senior fees → Class A interest → Class A principal → Class B interest → Class B principal (only if triggers pass) → residual. A red <span class="shortfall">shortfall</span> means Available Funds couldn't cover that step — a real credit event in a live deal.</div>
+    </div>
   `;
 
   sbBindAmort();
   sbBindCMO();
   sbBindStack();
+  sbBindDistrib();
   sbRunAmort();
   sbRunCMO();
   sbRunStack();
+  sbRunDistrib();
 }
 
 function sbBindAmort() {
@@ -3546,6 +3899,86 @@ function sbRunStack() {
     }
     cursor += trH;
   }
+}
+
+function sbBindDistrib() {
+  ["wf-af","wf-pool","wf-tr","wf-msf","wf-cu","wf-a","wf-ac","wf-b","wf-bc"].forEach(id => {
+    document.getElementById(id).addEventListener("input", sbRunDistrib);
+  });
+  document.getElementById("wf-trig").addEventListener("change", sbRunDistrib);
+}
+function sbRunDistrib() {
+  const af   = +document.getElementById("wf-af").value;
+  const pool = +document.getElementById("wf-pool").value * 1e6;
+  const trBps= +document.getElementById("wf-tr").value;
+  const msfBps= +document.getElementById("wf-msf").value;
+  const cuBps= +document.getElementById("wf-cu").value;
+  const aBal = +document.getElementById("wf-a").value * 1e6;
+  const aCpn = +document.getElementById("wf-ac").value;
+  const bBal = +document.getElementById("wf-b").value * 1e6;
+  const bCpn = +document.getElementById("wf-bc").value;
+  const triggers = document.getElementById("wf-trig").checked;
+
+  document.getElementById("wf-af-v").textContent  = sbFmtMoney(af);
+  document.getElementById("wf-pool-v").textContent = "$" + (pool/1e6).toFixed(0) + "M";
+  document.getElementById("wf-tr-v").textContent  = trBps.toFixed(2) + " bps";
+  document.getElementById("wf-msf-v").textContent = msfBps + " bps";
+  document.getElementById("wf-cu-v").textContent  = cuBps.toFixed(2) + " bps";
+  document.getElementById("wf-a-v").textContent   = "$" + (aBal/1e6).toFixed(0) + "M";
+  document.getElementById("wf-ac-v").textContent  = aCpn.toFixed(2) + "%";
+  document.getElementById("wf-b-v").textContent   = "$" + (bBal/1e6).toFixed(0) + "M";
+  document.getElementById("wf-bc-v").textContent  = bCpn.toFixed(2) + "%";
+
+  // Monthly accruals (annual rate / 12)
+  const trFee  = pool * trBps  / 10000 / 12;
+  const msf    = pool * msfBps / 10000 / 12;
+  const cuFee  = pool * cuBps  / 10000 / 12;
+  const aInt   = aBal * aCpn   / 100   / 12;
+  const bInt   = bBal * bCpn   / 100   / 12;
+
+  // Step definitions. Type drives styling. "prin" steps have a target = remaining bond balance.
+  const steps = [
+    { name: "Trustee fee",            kind: "fee",  accrued: trFee },
+    { name: "Master servicing fee",   kind: "fee",  accrued: msf   },
+    { name: "Custodian fee",          kind: "fee",  accrued: cuFee },
+    { name: "Class A interest",       kind: "int",  accrued: aInt  },
+    { name: "Class A principal",      kind: "prin", target:  aBal  },
+    { name: "Class B interest",       kind: "int",  accrued: bInt  },
+    { name: "Class B principal",      kind: "prin", target:  bBal, gated: !triggers, gateLabel: "trigger locked" }
+  ];
+
+  let funds = af;
+  const tbody = document.getElementById("wf-rows");
+  tbody.innerHTML = "";
+  for (const s of steps) {
+    let paid, target, shortfall = 0, locked = false;
+    if (s.kind === "prin") {
+      target = s.target;
+      if (s.gated) {
+        paid = 0;
+        locked = true;
+      } else {
+        paid = Math.min(funds, target);
+        funds -= paid;
+      }
+    } else {
+      target = s.accrued;
+      paid = Math.min(funds, target);
+      shortfall = target - paid;
+      funds -= paid;
+    }
+    const cls = locked ? "locked-row" : (s.kind + "-row");
+    const paidCell = locked
+      ? `<span style="color:var(--muted);">${sbFmtMoney(0)} <span style="font-size:10px;">(${s.gateLabel})</span></span>`
+      : (shortfall > 0.5
+          ? `${sbFmtMoney(paid)} <span class="shortfall">(short ${sbFmtMoney(shortfall)})</span>`
+          : sbFmtMoney(paid));
+    const tr = document.createElement("tr");
+    tr.className = cls;
+    tr.innerHTML = `<td>${s.name}</td><td>${sbFmtMoney(target)}</td><td>${paidCell}</td><td>${sbFmtMoney(funds)}</td>`;
+    tbody.appendChild(tr);
+  }
+  document.getElementById("wf-residual").textContent = sbFmtMoney(funds);
 }
 
 // ---------- Init ----------
