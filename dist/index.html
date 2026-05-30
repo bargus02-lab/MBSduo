@@ -557,6 +557,252 @@
   .sb-stats .sb-stat .v { font-size: 15px; font-weight: 900; color: var(--navy-800); font-variant-numeric: tabular-nums; margin-top: 2px; }
   .sb-hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
 
+  /* ========== Game polish ========== */
+  /* Mascot — Mortie the Mortgage House */
+  .mascot {
+    display: inline-grid;
+    place-items: center;
+    transform-origin: 50% 80%;
+    animation: mortie-idle 3.2s ease-in-out infinite;
+    cursor: pointer;
+    user-select: none;
+  }
+  .mascot.tiny { width: 32px; height: 32px; }
+  .mascot.big  { width: 96px; height: 96px; animation: mortie-bob 2.4s ease-in-out infinite; }
+  .mascot.huge { width: 140px; height: 140px; animation: mortie-bob 2.4s ease-in-out infinite; filter: drop-shadow(0 8px 16px rgba(10,37,64,0.25)); }
+  .mascot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .mascot.happy { animation: mortie-happy 0.55s cubic-bezier(.34,1.56,.64,1) 1; }
+  .mascot.sad   { animation: mortie-sad   0.45s ease-in-out 1; }
+  .mascot.cheer { animation: mortie-cheer 0.7s cubic-bezier(.34,1.56,.64,1) 1; }
+  @keyframes mortie-idle  { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  @keyframes mortie-bob   { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(2deg); } }
+  @keyframes mortie-happy { 0% { transform: scale(1); } 40% { transform: scale(1.18) rotate(-6deg); } 70% { transform: scale(0.96) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
+  @keyframes mortie-sad   { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px) rotate(-3deg); } 50% { transform: translateX(5px) rotate(3deg); } 80% { transform: translateX(-3px); } }
+  @keyframes mortie-cheer { 0% { transform: translateY(0); } 40% { transform: translateY(-22px) scale(1.1); } 70% { transform: translateY(4px) scale(0.96); } 100% { transform: translateY(0) scale(1); } }
+  /* Mortie's smile/frown swap */
+  .mortie-smile { display: block; }
+  .mortie-frown { display: none; }
+  .mascot.sad .mortie-smile { display: none; }
+  .mascot.sad .mortie-frown { display: block; }
+  /* Mortie eye blink */
+  .mortie-eye { animation: blink 4.5s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+  .mortie-eye:nth-of-type(2) { animation-delay: 0.05s; }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+
+  /* Answer feedback animations */
+  .answer.correct {
+    border-color: var(--good) !important;
+    background: var(--good-bg) !important;
+    animation: answer-pop 0.45s cubic-bezier(.34,1.56,.64,1);
+  }
+  .answer.correct .pip { background: var(--good); border-color: var(--good); color: white; }
+  .answer.wrong {
+    border-color: var(--bad) !important;
+    background: var(--bad-bg) !important;
+    animation: answer-shake 0.4s ease-in-out;
+  }
+  .answer.wrong .pip { background: var(--bad); border-color: var(--bad); color: white; }
+  @keyframes answer-pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+  @keyframes answer-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+  /* Topbar shake on heart loss */
+  .topbar.shake { animation: topbar-shake 0.4s ease-in-out; }
+  @keyframes topbar-shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+  }
+  /* Heart pulse when remaining hearts drop */
+  .stat.warn.lost { animation: heart-pulse 0.6s ease-out; }
+  @keyframes heart-pulse {
+    0% { transform: scale(1); background: rgba(255,255,255,0.18); }
+    30% { transform: scale(1.3); background: rgba(232,72,85,0.4); }
+    100% { transform: scale(1); background: rgba(255,255,255,0.18); }
+  }
+  /* Stat XP bump */
+  .stat.xp-bump { animation: xp-bump 0.5s ease-out; }
+  @keyframes xp-bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.25); background: rgba(247,201,92,0.5); }
+    100% { transform: scale(1); }
+  }
+  /* Streak flame pulse */
+  .stat.streak-pulse { animation: streak-pulse 1s ease-out; }
+  @keyframes streak-pulse {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.35) rotate(-6deg); }
+    50% { transform: scale(1.2) rotate(6deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  /* Result hero — make it bouncy */
+  .result-hero {
+    animation: result-in 0.55s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes result-in {
+    0% { opacity: 0; transform: translateY(20px) scale(0.85); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .result-stat { animation: result-stat-in 0.5s cubic-bezier(.34,1.56,.64,1) backwards; }
+  .result-stat:nth-child(1) { animation-delay: 0.1s; }
+  .result-stat:nth-child(2) { animation-delay: 0.2s; }
+  .result-stat:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes result-stat-in {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .result-stat .value.counter { color: var(--good); }
+
+  /* Level-up overlay */
+  .level-up-back {
+    position: fixed; inset: 0; z-index: 200;
+    background: radial-gradient(circle at 50% 30%, rgba(10,37,64,0.85), rgba(10,37,64,0.97));
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: bg-fade 0.3s ease-out;
+  }
+  .level-up-back.show { display: flex; }
+  @keyframes bg-fade { from { opacity: 0; } to { opacity: 1; } }
+  .level-up-card {
+    background: var(--white);
+    border-radius: 22px;
+    padding: 28px 22px 22px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    animation: levelup-in 0.65s cubic-bezier(.34,1.56,.64,1);
+    position: relative;
+  }
+  @keyframes levelup-in {
+    0% { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+    60% { opacity: 1; transform: scale(1.05) rotate(2deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .level-up-card h2 {
+    background: linear-gradient(90deg, var(--navy-800), var(--navy-500), var(--gold));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 2.2s linear infinite;
+    font-size: 28px;
+    margin: 10px 0 4px;
+  }
+  @keyframes shimmer { to { background-position: 200% center; } }
+  .level-up-num {
+    font-size: 64px;
+    font-weight: 900;
+    color: var(--navy-800);
+    line-height: 1;
+    margin: 8px 0;
+    animation: number-pop 0.7s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes number-pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .level-up-card .blurb { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+  .level-up-card .sparkles {
+    position: absolute; inset: -20px; pointer-events: none;
+    overflow: visible;
+  }
+  .level-up-card .sparkles span {
+    position: absolute;
+    font-size: 24px;
+    animation: sparkle 1.6s ease-in-out infinite;
+    opacity: 0;
+  }
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.4) rotate(0); }
+    40% { opacity: 1; transform: scale(1.1) rotate(20deg); }
+    60% { opacity: 1; transform: scale(1) rotate(-15deg); }
+  }
+
+  /* Share button */
+  .share-btn {
+    background: linear-gradient(135deg, var(--gold), #e8a93a);
+    color: var(--navy-800);
+    border: none;
+    border-radius: 14px;
+    padding: 13px 18px;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #b07d20;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%;
+  }
+  .share-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #b07d20; }
+  .share-btn.copied { background: var(--good); color: white; box-shadow: 0 5px 0 #156d3d; }
+  .share-btn .ico { font-size: 18px; }
+
+  /* Welcome screen big mascot */
+  .welcome-mascot {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; padding: 18px 0 4px;
+  }
+  .welcome-bubble {
+    background: var(--white);
+    border: 2px solid var(--navy-100);
+    border-radius: 16px;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: var(--navy-700);
+    font-weight: 700;
+    position: relative;
+    max-width: 260px;
+    text-align: center;
+    animation: bubble-in 0.45s cubic-bezier(.34,1.56,.64,1) 0.25s backwards;
+  }
+  .welcome-bubble::after {
+    content: ""; position: absolute;
+    bottom: -8px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--navy-100);
+  }
+  @keyframes bubble-in {
+    0% { opacity: 0; transform: scale(0.7) translateY(8px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* Pulse on section card progress fill */
+  .progress-fill { animation: bar-fill 0.6s ease-out; }
+  @keyframes bar-fill { from { transform: scaleX(0.5); transform-origin: left; } to { transform: scaleX(1); } }
+
+  /* Tab tap feedback */
+  .tab { transition: transform 0.12s ease; }
+  .tab:active { transform: scale(0.88); }
+  .tab.active .ico { animation: tab-pop 0.32s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes tab-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+  /* Unit-node glow on completion */
+  .unit-node.completed { animation: unit-glow 1.8s ease-in-out infinite; }
+  @keyframes unit-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(247,201,92,0); }
+    50% { box-shadow: 0 0 0 6px rgba(247,201,92,0.18); }
+  }
+  /* Disable glow for performance after first appearance */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   /* No outline on mouse, keep for keyboard */
   :focus { outline: none; }
   :focus-visible { outline: 3px solid var(--navy-400); outline-offset: 2px; }
@@ -566,7 +812,7 @@
 <div id="app">
   <div class="topbar" id="topbar">
     <div class="brand">
-      <div class="brand-mark">M</div>
+      <div class="mascot tiny" id="mascot-top" title="Hi! I'm Mortie 🏠"></div>
       <span>MBSduo</span>
     </div>
     <div class="stats" id="stats">
@@ -589,6 +835,24 @@
 
 <div class="modal-back" id="modal-back">
   <div class="modal" id="modal"></div>
+</div>
+
+<div class="level-up-back" id="level-up-back">
+  <div class="level-up-card" id="level-up-card">
+    <div class="sparkles">
+      <span style="top:8%;left:10%;animation-delay:0s;">✨</span>
+      <span style="top:14%;right:8%;animation-delay:0.3s;">⭐</span>
+      <span style="bottom:18%;left:6%;animation-delay:0.6s;">✨</span>
+      <span style="bottom:8%;right:12%;animation-delay:0.9s;">💫</span>
+      <span style="top:50%;left:-10px;animation-delay:0.45s;">⭐</span>
+      <span style="top:50%;right:-10px;animation-delay:0.75s;">✨</span>
+    </div>
+    <div class="mascot huge" id="mascot-levelup"></div>
+    <h2>LEVEL UP!</h2>
+    <div class="level-up-num" id="level-up-num">2</div>
+    <p class="blurb" id="level-up-blurb">You're getting sharp at this 🔥</p>
+    <button class="btn block success" id="level-up-dismiss">Keep going</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -2119,6 +2383,192 @@ function showToast(msg, ms = 1800) {
   showToast._t = setTimeout(() => t.classList.remove("show"), ms);
 }
 
+// ---------- Mortie the Mascot ----------
+function mortieSVG() {
+  // Inline SVG: friendly house with eyes, smile/frown swap, percent sign roof tag.
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <!-- roof shadow -->
+    <path d="M50 8 L88 38 L82 42 L50 18 L18 42 L12 38 Z" fill="#0a2540"/>
+    <!-- roof -->
+    <path d="M50 12 L85 40 L15 40 Z" fill="#1a4a82"/>
+    <!-- chimney -->
+    <rect x="66" y="18" width="9" height="14" rx="1.5" fill="#0a2540"/>
+    <!-- body -->
+    <rect x="20" y="40" width="60" height="48" rx="6" fill="#ffffff" stroke="#0a2540" stroke-width="3"/>
+    <!-- door -->
+    <rect x="42" y="64" width="16" height="24" rx="2" fill="#1a4a82"/>
+    <circle cx="54" cy="76" r="1.5" fill="#f7c95c"/>
+    <!-- left eye -->
+    <ellipse class="mortie-eye" cx="34" cy="54" rx="4.5" ry="5.5" fill="#0a2540"/>
+    <circle cx="35.5" cy="52" r="1.6" fill="#ffffff"/>
+    <!-- right eye -->
+    <ellipse class="mortie-eye" cx="66" cy="54" rx="4.5" ry="5.5" fill="#0a2540"/>
+    <circle cx="67.5" cy="52" r="1.6" fill="#ffffff"/>
+    <!-- smile -->
+    <path class="mortie-smile" d="M38 63 Q50 71 62 63" fill="none" stroke="#0a2540" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- frown -->
+    <path class="mortie-frown" d="M38 66 Q50 60 62 66" fill="none" stroke="#0a2540" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- cheeks -->
+    <circle cx="28" cy="62" r="2.5" fill="#f3a8b5" opacity="0.7"/>
+    <circle cx="72" cy="62" r="2.5" fill="#f3a8b5" opacity="0.7"/>
+    <!-- percent tag on roof -->
+    <circle cx="34" cy="32" r="6" fill="#f7c95c" stroke="#0a2540" stroke-width="1.5"/>
+    <text x="34" y="35" text-anchor="middle" font-size="8" font-weight="900" fill="#0a2540">%</text>
+  </svg>`;
+}
+function mountMortie(el) {
+  if (!el) return;
+  if (!el.firstElementChild) el.innerHTML = mortieSVG();
+}
+function mortieReact(el, type) {
+  if (!el) return;
+  el.classList.remove("happy", "sad", "cheer");
+  // Force reflow so the same class re-triggers animation
+  void el.offsetWidth;
+  el.classList.add(type);
+  setTimeout(() => el.classList.remove(type), 800);
+}
+function bumpStat(id, className) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const parent = el.closest(".stat") || el;
+  parent.classList.remove(className);
+  void parent.offsetWidth;
+  parent.classList.add(className);
+  setTimeout(() => parent.classList.remove(className), 700);
+}
+
+// ---------- Confetti ----------
+function confetti(opts) {
+  opts = opts || {};
+  const c = document.createElement("canvas");
+  c.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9999;";
+  document.body.appendChild(c);
+  const dpr = window.devicePixelRatio || 1;
+  const W = window.innerWidth, H = window.innerHeight;
+  c.width = W * dpr; c.height = H * dpr;
+  c.style.width = W + "px"; c.style.height = H + "px";
+  const ctx = c.getContext("2d");
+  ctx.scale(dpr, dpr);
+  const colors = opts.colors || ["#0a2540","#1a4a82","#2563a6","#4a86c4","#f7c95c","#e84855","#22c55e","#ffffff"];
+  const N = opts.count || 90;
+  const ox = opts.x != null ? opts.x : W / 2;
+  const oy = opts.y != null ? opts.y : H / 3;
+  const spreadAng = opts.spreadAng || Math.PI * 0.9;
+  const baseAng = opts.angle != null ? opts.angle : -Math.PI / 2;
+  const parts = [];
+  for (let i = 0; i < N; i++) {
+    const ang = baseAng + (Math.random() - 0.5) * spreadAng;
+    const sp = 6 + Math.random() * 10;
+    parts.push({
+      x: ox, y: oy,
+      vx: Math.cos(ang) * sp,
+      vy: Math.sin(ang) * sp,
+      g: 0.28,
+      drag: 0.99,
+      size: 5 + Math.random() * 7,
+      color: colors[(Math.random() * colors.length) | 0],
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.5,
+      life: 1.0,
+      shape: Math.random() < 0.5 ? "rect" : "circle"
+    });
+  }
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(2, (now - last) / 16.67);
+    last = now;
+    ctx.clearRect(0, 0, W, H);
+    let alive = 0;
+    for (const p of parts) {
+      if (p.life <= 0) continue;
+      p.vx *= p.drag; p.vy = p.vy * p.drag + p.g * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      p.life -= 0.006 * dt;
+      if (p.y > H + 30 || p.life <= 0) continue;
+      alive++;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 1.2));
+      ctx.fillStyle = p.color;
+      if (p.shape === "rect") ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size / 1.5);
+      else { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    }
+    if (alive > 0) requestAnimationFrame(frame);
+    else c.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------- Animated number counter ----------
+function animateNumber(el, from, to, duration) {
+  if (!el) return;
+  duration = duration || 700;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(from + (to - from) * eased);
+    if (t < 1) requestAnimationFrame(tick);
+    else el.textContent = to;
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---------- Share progress ----------
+function shareProgress(xpEarned, btn) {
+  const { level } = levelFromXP(state.xp);
+  const url = "https://bargus02-lab.github.io/MBSduo/";
+  const lead = xpEarned > 0
+    ? `I just earned +${xpEarned} XP on MBSduo 🏠📈`
+    : `I'm learning mortgage-backed securities on MBSduo 🏠📈`;
+  const text = `${lead}\nLevel ${level} · ${state.completedUnits.length} units · 🔥 ${state.streak} day streak\nPlay it: ${url}`;
+  const shareData = { title: "MBSduo", text, url };
+  if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+    navigator.share(shareData).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      if (btn) {
+        const orig = btn.innerHTML;
+        btn.classList.add("copied");
+        btn.innerHTML = '<span class="ico">✓</span> Copied to clipboard';
+        setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = orig; }, 1800);
+      } else showToast("Link copied!");
+    });
+  } else {
+    showToast("Share: " + url);
+  }
+}
+
+// ---------- Level up overlay ----------
+function showLevelUp(newLevel) {
+  const back = document.getElementById("level-up-back");
+  document.getElementById("level-up-num").textContent = newLevel;
+  const blurbs = [
+    "You're getting sharp at this 🔥",
+    "MBS expert in the making 📈",
+    "Tranche tactician unlocked 🧩",
+    "Prepayment whisperer 🌊",
+    "Yield curve in your bones 📐",
+    "Master of the secondary market 🏛️",
+    "You're built different 💎",
+    "Wall Street's calling 📞",
+    "MAX LEVEL — legendary 🏆"
+  ];
+  document.getElementById("level-up-blurb").textContent =
+    blurbs[Math.min(newLevel - 2, blurbs.length - 1)] || blurbs[0];
+  mountMortie(document.getElementById("mascot-levelup"));
+  back.classList.add("show");
+  // Big confetti burst from both bottom corners
+  setTimeout(() => {
+    confetti({ x: 40, y: window.innerHeight - 20, angle: -Math.PI / 3, spreadAng: Math.PI / 3, count: 70 });
+    confetti({ x: window.innerWidth - 40, y: window.innerHeight - 20, angle: -2 * Math.PI / 3, spreadAng: Math.PI / 3, count: 70 });
+  }, 300);
+}
+
 function renderStats() {
   document.getElementById("stat-xp").textContent = state.xp;
   document.getElementById("stat-streak").textContent = state.streak;
@@ -2147,7 +2597,16 @@ function renderHome() {
     if (h < 18) return "Good afternoon";
     return "Good evening";
   })();
+  const bubble = state.completedUnits.length === 0
+    ? "Hi! I'm Mortie. Tap me — or pick a unit to start."
+    : (state.streak >= 3
+        ? `🔥 ${state.streak}-day streak! Don't break it.`
+        : "Welcome back! Ready for another unit?");
   let html = `
+    <div class="welcome-mascot">
+      <div class="mascot big" id="mascot-home"></div>
+      <div class="welcome-bubble">${bubble}</div>
+    </div>
     <div class="welcome" style="padding-top:6px;">
       <h1>${greeting}!</h1>
       <p class="sub">Tap a section to keep leveling up. ${state.completedUnits.length === 0 ? "Start with Foundations." : ""}</p>
@@ -2189,6 +2648,13 @@ function renderHome() {
   });
 
   v.innerHTML = html;
+  const homeMortie = document.getElementById("mascot-home");
+  mountMortie(homeMortie);
+  homeMortie.addEventListener("click", (e) => {
+    mortieReact(e.currentTarget, "cheer");
+    const r = e.currentTarget.getBoundingClientRect();
+    confetti({ x: r.left + r.width / 2, y: r.top + r.height / 2, count: 30, angle: -Math.PI / 2, spreadAng: Math.PI });
+  });
   v.querySelectorAll(".unit-node").forEach(btn => {
     btn.addEventListener("click", () => {
       if (btn.disabled) return;
@@ -2287,14 +2753,22 @@ function handleCheck() {
     if (i === q.answer) a.classList.add("correct");
     else if (i === lesson.selected && !correct) a.classList.add("wrong");
   });
-  if (correct) lesson.correct++;
-  else {
+  if (correct) {
+    lesson.correct++;
+    mortieReact(document.getElementById("mascot-top"), "happy");
+  } else {
     lesson.wrong++;
+    mortieReact(document.getElementById("mascot-top"), "sad");
     if (state.hearts_unlimited_until <= Date.now()) {
       state.hearts = Math.max(0, state.hearts - 1);
       if (state.hearts === state.maxHearts - 1) state.lastHeartRefill = Date.now();
       saveState();
       renderStats();
+      // Heart pulse + topbar shake
+      const tb = document.getElementById("topbar");
+      tb.classList.remove("shake"); void tb.offsetWidth; tb.classList.add("shake");
+      setTimeout(() => tb.classList.remove("shake"), 450);
+      bumpStat("stat-hearts", "lost");
     }
   }
 
@@ -2349,6 +2823,8 @@ function nextQuestion() {
 }
 
 function finishLesson() {
+  const prevLevel = levelFromXP(state.xp).level;
+  const prevStreak = state.streak;
   const xpEarned = lesson.correct * 10 + (lesson.wrong === 0 ? 15 : 0); // perfect bonus
   state.xp += xpEarned;
   const wasNewlyCompleted = !state.completedUnits.includes(lesson.unitId);
@@ -2373,6 +2849,33 @@ function finishLesson() {
   saveState();
   renderStats();
   renderResult(xpEarned, newBadges);
+
+  // 🎉 Celebrations
+  const newLevel = levelFromXP(state.xp).level;
+  const leveledUp = newLevel > prevLevel;
+  const perfect = lesson.wrong === 0;
+
+  // Confetti from a low burst, denser for perfect / level-up
+  setTimeout(() => {
+    confetti({
+      x: window.innerWidth / 2,
+      y: window.innerHeight * 0.45,
+      count: perfect ? 140 : 80,
+      angle: -Math.PI / 2,
+      spreadAng: Math.PI * 1.1
+    });
+  }, 250);
+
+  // XP stat bump
+  setTimeout(() => bumpStat("stat-xp", "xp-bump"), 100);
+  // Streak flame pulse if streak ticked up
+  if (state.streak > prevStreak) {
+    setTimeout(() => bumpStat("stat-streak", "streak-pulse"), 350);
+  }
+
+  if (leveledUp) {
+    setTimeout(() => showLevelUp(newLevel), 1100);
+  }
 }
 
 function renderResult(xpEarned, newBadges) {
@@ -2382,12 +2885,12 @@ function renderResult(xpEarned, newBadges) {
   const perfect = lesson.wrong === 0;
   v.innerHTML = `
     <div class="result-hero">
-      <div class="big">${perfect ? "🏆" : "🎉"}</div>
-      <h2>${perfect ? "Perfect unit!" : "Unit complete"}</h2>
+      <div style="display:flex;justify-content:center;margin-bottom:6px;"><div class="mascot huge" id="mascot-result"></div></div>
+      <h2>${perfect ? "Perfect unit! 🏆" : "Unit complete 🎉"}</h2>
       <p>${perfect ? "Spotless run — +15 XP bonus" : "Nice work, keep going"}</p>
     </div>
     <div class="result-stats">
-      <div class="result-stat"><div class="label">XP earned</div><div class="value">+${xpEarned}</div></div>
+      <div class="result-stat"><div class="label">XP earned</div><div class="value counter" id="result-xp-val">+0</div></div>
       <div class="result-stat"><div class="label">Accuracy</div><div class="value">${accuracy}%</div></div>
       <div class="result-stat"><div class="label">Time</div><div class="value">${seconds}s</div></div>
     </div>
@@ -2400,10 +2903,26 @@ function renderResult(xpEarned, newBadges) {
       </div>
     ` : ""}
     <div style="margin-top:22px; display:grid; gap:10px;">
+      <button class="share-btn" id="share-btn"><span class="ico">📤</span>Share my progress</button>
       <button class="btn block success" id="continue-home">Continue</button>
       <button class="btn block secondary" id="another">Another unit</button>
     </div>
   `;
+  mountMortie(document.getElementById("mascot-result"));
+  setTimeout(() => mortieReact(document.getElementById("mascot-result"), perfect ? "cheer" : "happy"), 100);
+  // Animated +XP counter
+  const xpEl = document.getElementById("result-xp-val");
+  let started = 0;
+  const tick = (now) => {
+    if (!started) started = now;
+    const t = Math.min(1, (now - started) / 900);
+    const eased = 1 - Math.pow(1 - t, 3);
+    xpEl.textContent = "+" + Math.round(xpEarned * eased);
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  // Share button wiring
+  document.getElementById("share-btn").onclick = (e) => shareProgress(xpEarned, e.currentTarget);
   document.getElementById("continue-home").onclick = () => { lesson = null; go("home"); };
   document.getElementById("another").onclick = () => {
     // Find next unit: same section if available, else first unit of next section
@@ -2510,11 +3029,13 @@ function renderProfile() {
       <div class="stat-tile"><div class="label">Badges</div><div class="value">🏅 ${state.badges.length}/${ACHIEVEMENTS.length}</div></div>
     </div>
     <div style="display:grid;gap:10px;margin-top:8px;">
+      <button class="share-btn" id="profile-share"><span class="ico">📤</span>Share MBSduo</button>
       <button class="btn block secondary" id="practice-btn">Random Practice</button>
       <button class="btn block ghost" id="reset-btn" style="color:var(--bad);">Reset Progress</button>
     </div>
   `;
 
+  document.getElementById("profile-share").onclick = (e) => shareProgress(0, e.currentTarget);
   document.getElementById("practice-btn").onclick = startRandomPractice;
   document.getElementById("reset-btn").onclick = () => {
     if (confirm("This wipes all XP, streaks, completed units, and badges. Are you sure?")) {
@@ -3030,6 +3551,19 @@ function sbRunStack() {
 // ---------- Init ----------
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => go(t.dataset.tab));
+});
+
+// Mount the topbar mascot and wire it as a little easter egg
+mountMortie(document.getElementById("mascot-top"));
+document.getElementById("mascot-top").addEventListener("click", (e) => {
+  mortieReact(e.currentTarget, "cheer");
+  const r = e.currentTarget.getBoundingClientRect();
+  confetti({ x: r.left + r.width / 2, y: r.top + r.height / 2, count: 22, angle: -Math.PI / 2, spreadAng: Math.PI });
+});
+
+// Level-up overlay dismiss
+document.getElementById("level-up-dismiss").addEventListener("click", () => {
+  document.getElementById("level-up-back").classList.remove("show");
 });
 
 refreshHeartsIfNeeded();
